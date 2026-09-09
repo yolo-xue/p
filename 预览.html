@@ -16,8 +16,10 @@
       --primary-hover: #334155;
       --danger: #ef4444;
       --radius: 10px;
+      --canvas-bg: #ffffff;
     }
 
+    /* 夜间模式样式定义 */
     body.dark-mode {
       --bg-main: #0f172a;
       --bg-card: #1e293b;
@@ -28,6 +30,7 @@
       --primary: #38bdf8;
       --primary-hover: #0284c7;
       --danger: #f87171;
+      --canvas-bg: #121212;
     }
 
     * {
@@ -44,7 +47,7 @@
       height: 100vh;
       display: flex;
       overflow: hidden;
-      transition: background-color 0.2s, color 0.2s;
+      transition: background-color 0.25s, color 0.25s;
     }
 
     /* ---------------- 左侧边栏 ---------------- */
@@ -55,18 +58,20 @@
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
-      z-index: 10;
+      height: 100vh;
+      transition: background-color 0.25s, border-color 0.25s;
     }
 
     .sidebar-header {
-      padding: 14px;
+      padding: 16px;
       border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
     }
 
     .sidebar-title {
       font-size: 15px;
       font-weight: 600;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -75,43 +80,43 @@
     .search-box {
       width: 100%;
       padding: 9px 12px;
-      font-size: 13px;
+      font-size: 14px;
       border: 1px solid var(--border-color);
       border-radius: var(--radius);
       outline: none;
       background: var(--bg-main);
       color: var(--text-main);
+      transition: all 0.2s;
     }
 
-    /* 代码堆积列表：支持无限多文件上下滑动 */
+    /* 代码堆积列表：支持多文件上下滑动 */
     .snippet-list {
       flex: 1;
       overflow-y: auto;
-      padding: 10px;
-      -webkit-overflow-scrolling: touch;
+      padding: 12px;
     }
 
     .snippet-item {
       padding: 12px;
       border-radius: var(--radius);
       margin-bottom: 8px;
-      border: 1px solid var(--border-color);
+      border: 1px solid transparent;
       cursor: pointer;
+      transition: all 0.2s;
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--bg-main);
-      user-select: none;
     }
 
-    .snippet-item:active {
-      opacity: 0.8;
+    .snippet-item:hover {
+      border-color: var(--border-color);
     }
 
     .snippet-item.active {
       background: var(--bg-card);
       border-color: var(--primary);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
 
     .snippet-info {
@@ -122,7 +127,7 @@
 
     .snippet-name {
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -140,9 +145,8 @@
       color: var(--text-muted);
       font-size: 15px;
       cursor: pointer;
-      padding: 6px 10px;
+      padding: 6px 8px;
       border-radius: 4px;
-      z-index: 15;
     }
 
     .delete-btn:hover {
@@ -155,9 +159,10 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 14px;
-      gap: 12px;
+      padding: 16px;
+      gap: 16px;
       overflow: hidden;
+      height: 100vh;
     }
 
     .card {
@@ -167,29 +172,36 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: background-color 0.25s, border-color 0.25s;
+    }
+
+    /* 上方代码编辑卡片 */
+    .editor-card {
+      flex-shrink: 0;
+      transition: all 0.3s ease;
     }
 
     .card-header {
-      padding: 10px 14px;
+      padding: 10px 16px;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--bg-main);
-      gap: 8px;
+      gap: 10px;
       flex-wrap: wrap;
-      z-index: 5;
     }
 
     .name-input {
       font-size: 14px;
       font-weight: 600;
       border: 1px solid var(--border-color);
-      padding: 7px 10px;
+      padding: 7px 12px;
       border-radius: 6px;
       outline: none;
       flex: 1;
-      min-width: 150px;
+      min-width: 180px;
+      max-width: 260px;
       background: var(--bg-card);
       color: var(--text-main);
     }
@@ -197,25 +209,24 @@
     .btn-group {
       display: flex;
       gap: 6px;
-      align-items: center;
       flex-wrap: wrap;
     }
 
     .btn {
       padding: 7px 12px;
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 500;
       border-radius: 6px;
       cursor: pointer;
       border: 1px solid var(--border-color);
       background: var(--bg-card);
       color: var(--text-main);
       white-space: nowrap;
-      touch-action: manipulation;
+      transition: all 0.2s;
     }
 
     .btn:active {
-      transform: scale(0.96);
+      transform: scale(0.97);
     }
 
     .btn-primary {
@@ -230,7 +241,7 @@
 
     .editor-body {
       height: 190px;
-      transition: height 0.25s ease;
+      transition: height 0.3s ease;
     }
 
     .editor-card.collapsed .editor-body {
@@ -244,18 +255,18 @@
       padding: 12px;
       border: none;
       outline: none;
-      font-family: Consolas, Monaco, monospace;
+      font-family: "Fira Code", Consolas, Monaco, monospace;
       font-size: 13px;
-      line-height: 1.45;
+      line-height: 1.5;
       resize: none;
       color: var(--text-main);
       background: var(--bg-card);
     }
 
-    /* 预览画板 */
+    /* 下方实时预览卡片 */
     .preview-card {
       flex: 1;
-      min-height: 220px;
+      min-height: 250px;
     }
 
     .preview-title {
@@ -268,22 +279,16 @@
       flex: 1;
       width: 100%;
       height: 100%;
-      overflow: auto;
-      background: #ffffff; /* 预览画布默认保持纯白 */
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      -webkit-overflow-scrolling: touch;
+      overflow: hidden;
+      background: var(--canvas-bg);
+      transition: background-color 0.25s;
     }
 
     iframe.preview-frame {
       width: 100%;
       height: 100%;
       border: none;
-      background: #ffffff;
-      transform-origin: top center;
-      transition: transform 0.2s;
+      overflow-y: auto;
     }
 
     .empty-tip {
@@ -293,7 +298,7 @@
       padding: 20px 0;
     }
 
-    /* ---------------- 移动端全屏幕适配 ---------------- */
+    /* ---------------- 移动端自适应适配 ---------------- */
     @media (max-width: 768px) {
       body {
         flex-direction: column;
@@ -304,18 +309,16 @@
 
       .sidebar {
         width: 100%;
+        height: auto;
         max-height: 220px;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
       }
 
-      .snippet-list {
-        max-height: 130px;
-      }
-
       .main-content {
-        padding: 8px;
-        gap: 10px;
+        height: auto;
+        padding: 10px;
+        gap: 12px;
         overflow: visible;
       }
 
@@ -325,36 +328,30 @@
       }
 
       .name-input {
+        max-width: 100%;
         width: 100%;
       }
 
       .btn-group {
         width: 100%;
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 6px;
       }
 
-      .btn {
-        padding: 8px 2px;
-        font-size: 11px;
-        text-align: center;
-      }
-
       .editor-body {
-        height: 150px;
+        height: 160px;
       }
 
       .preview-card {
         height: 480px;
-        min-height: 400px;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- 左侧：代码库 & 搜索 -->
+  <!-- 左侧：代码列表与搜索 -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-title">
@@ -370,37 +367,31 @@
     <div class="snippet-list" id="snippetList"></div>
   </aside>
 
-  <!-- 右侧：编辑 & 实时预览 -->
+  <!-- 右侧：编辑与实时预览 -->
   <main class="main-content">
     
-    <!-- 右上方：代码编辑框 -->
+    <!-- 右上方：代码编辑框（可折叠） -->
     <div class="card editor-card" id="editorCard">
       <div class="card-header">
-        <input type="text" id="snippetTitle" class="name-input" placeholder="输入代码名字...">
+        <input type="text" id="snippetTitle" class="name-input" placeholder="输入代码名称...">
         <div class="btn-group">
           <button class="btn" id="collapseBtn" onclick="toggleEditor()">折叠代码框</button>
+          <button class="btn" onclick="exportDocx()">📄 导出 docx</button>
           <button class="btn btn-primary" onclick="saveSnippet()">保存代码</button>
-          <button class="btn" style="background:#10b981; color:#fff; border-color:#10b981;" onclick="exportDocx()">📄 导出 docx</button>
           <button class="btn btn-primary" style="background:#2563eb; border-color:#2563eb; color:#fff;" onclick="updatePreview()">▶ 预览效果</button>
         </div>
       </div>
       <div class="editor-body" id="editorBody">
-        <textarea id="codeEditor" class="code-editor" placeholder="在此粘贴你的代码..."></textarea>
+        <textarea id="codeEditor" class="code-editor" placeholder="在此粘贴你的 HTML / CSS / JS 代码..."></textarea>
       </div>
     </div>
 
-    <!-- 右下方：预览效果 (自适应缩放) -->
-    <div class="card preview-card">
+    <!-- 右下方：实时预览区域 -->
+    <div class="card preview-card" id="previewCard">
       <div class="card-header">
         <span class="preview-title">实时预览效果</span>
-        <div class="btn-group">
-          <button class="btn" onclick="setCanvasScale(1)">100%</button>
-          <button class="btn" onclick="setCanvasScale(0.75)">75%</button>
-          <button class="btn" onclick="setCanvasScale(0.5)">50%</button>
-          <button class="btn" onclick="toggleCanvasBg()">🎨 画布黑/白</button>
-        </div>
       </div>
-      <div class="preview-wrapper" id="previewWrapper">
+      <div class="preview-wrapper">
         <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
       </div>
     </div>
@@ -408,17 +399,16 @@
   </main>
 
   <script>
-    const STORAGE_KEY = 'my_saved_code_snippets_v2';
+    const STORAGE_KEY = 'my_code_workspace_data';
     let snippets = [];
     let currentId = null;
     let isCollapsed = false;
-    let currentScale = 1;
-    let isWhiteCanvas = true;
+    let isDarkMode = false;
 
-    // 页面加载完成后立即绑定数据
-    window.addEventListener('DOMContentLoaded', function() {
+    // 页面加载初始化
+    window.addEventListener('DOMContentLoaded', () => {
       loadSnippets();
-      if (!snippets || snippets.length === 0) {
+      if (snippets.length === 0) {
         loadDefaultExample();
       } else {
         renderSnippetList();
@@ -426,87 +416,67 @@
       }
     });
 
-    // 切换整体夜间模式
+    // 1. 切换夜间模式（UI 与画布画布主题强绑定）
     function toggleDarkMode() {
-      document.body.classList.toggle('dark-mode');
-      const isDark = document.body.classList.contains('dark-mode');
-      document.getElementById('themeBtn').textContent = isDark ? '☀️ 亮色模式' : '🌙 夜间模式';
-    }
-
-    // 切换画布黑白底色 (默认纯白)
-    function toggleCanvasBg() {
-      isWhiteCanvas = !isWhiteCanvas;
-      const wrapper = document.getElementById('previewWrapper');
-      const iframe = document.getElementById('previewFrame');
-      const bg = isWhiteCanvas ? '#ffffff' : '#121212';
-      wrapper.style.backgroundColor = bg;
-      if (iframe) iframe.style.backgroundColor = bg;
-    }
-
-    // 画布自适应缩放 (防止组件过大看不全)
-    function setCanvasScale(scale) {
-      currentScale = scale;
-      const iframe = document.getElementById('previewFrame');
-      if (iframe) {
-        iframe.style.transform = `scale(${scale})`;
-        iframe.style.width = (100 / scale) + '%';
-        iframe.style.height = (100 / scale) + '%';
+      isDarkMode = !isDarkMode;
+      if (isDarkMode) {
+        document.body.classList.add('dark-mode');
+        document.getElementById('themeBtn').textContent = '☀️ 亮色模式';
+      } else {
+        document.body.classList.remove('dark-mode');
+        document.getElementById('themeBtn').textContent = '🌙 夜间模式';
       }
+      updatePreview(); // 同步刷新预览画布的底色
     }
 
-    // 从本地存储装载数据
+    // 2. 本地存储读取与保存
     function loadSnippets() {
       try {
         const data = localStorage.getItem(STORAGE_KEY);
         snippets = data ? JSON.parse(data) : [];
-      } catch(e) {
+      } catch (e) {
         snippets = [];
       }
     }
 
-    // 保存数据到本地
     function saveToStorage() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(snippets));
-      } catch(e) {
-        console.warn('存储受限', e);
+      } catch (e) {
+        console.warn('本地存储只读或不可用');
       }
     }
 
-    // 渲染左侧保存列表 (支持搜索和无限滚动)
+    // 3. 渲染代码列表（支持搜索与滑动）
     function renderSnippetList() {
-      const searchInput = document.getElementById('searchInput');
-      const keyword = (searchInput ? searchInput.value : '').toLowerCase().trim();
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
       const listContainer = document.getElementById('snippetList');
-      if (!listContainer) return;
-      
       listContainer.innerHTML = '';
+
       const filtered = snippets.filter(item => (item.title || '').toLowerCase().includes(keyword));
 
       if (filtered.length === 0) {
-        listContainer.innerHTML = '<div class="empty-tip">没有找到代码</div>';
+        listContainer.innerHTML = '<div class="empty-tip">未找到匹配的代码</div>';
         return;
       }
 
       filtered.forEach(item => {
         const div = document.createElement('div');
         div.className = `snippet-item ${item.id === currentId ? 'active' : ''}`;
-        
-        // 点击列表直接进入该代码并更新右侧预览
-        div.onclick = function() { selectSnippet(item.id); };
+        div.onclick = () => selectSnippet(item.id);
 
         div.innerHTML = `
           <div class="snippet-info">
             <div class="snippet-name">${escapeHtml(item.title || '未命名代码')}</div>
             <div class="snippet-date">${item.date}</div>
           </div>
-          <button class="delete-btn" onclick="deleteSnippet(event, '${item.id}')" title="删除">✕</button>
+          <button class="delete-btn" onclick="deleteSnippet(event, '${item.id}')" title="删除代码">✕</button>
         `;
         listContainer.appendChild(div);
       });
     }
 
-    // 选中代码片段，加载并立即在右下角预览
+    // 4. 点击列表项进入并自动呈现预览
     function selectSnippet(id) {
       const item = snippets.find(s => s.id === id);
       if (!item) return;
@@ -517,9 +487,14 @@
       
       renderSnippetList();
       updatePreview();
+
+      // 移动端自动平滑滚动至预览卡片
+      if (window.innerWidth <= 768) {
+        document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
+      }
     }
 
-    // 点击保存按钮
+    // 5. 保存当前代码片段
     function saveSnippet() {
       const title = document.getElementById('snippetTitle').value.trim() || '未命名代码';
       const code = document.getElementById('codeEditor').value;
@@ -540,7 +515,48 @@
       alert('保存成功！');
     }
 
-    // 新建代码
+    // 6. 导出 DOCX 文档
+    function exportDocx() {
+      const title = document.getElementById('snippetTitle').value.trim() || '代码片段';
+      const code = document.getElementById('codeEditor').value;
+
+      if (!code) {
+        alert('当前没有可导出的代码！');
+        return;
+      }
+
+      const docHtml = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset="utf-8">
+          <title>${escapeHtml(title)}</title>
+          <style>
+            body { font-family: Microsoft YaHei, Arial, sans-serif; padding: 20px; line-height: 1.6; }
+            h1 { font-size: 20pt; border-bottom: 2px solid #0f172a; padding-bottom: 8px; color: #0f172a; }
+            pre { background: #f1f5f9; padding: 15px; border-radius: 6px; font-family: Consolas, monospace; font-size: 10pt; white-space: pre-wrap; word-wrap: break-word; color: #334155; }
+          </style>
+        </head>
+        <body>
+          <h1>${escapeHtml(title)}</h1>
+          <p style="color:#64748b; font-size:9pt;">导出时间：${new Date().toLocaleString('zh-CN')}</p>
+          <hr/>
+          <pre>${escapeHtml(code)}</pre>
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${title}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // 7. 清空/新建
     function clearEditor() {
       currentId = null;
       document.getElementById('snippetTitle').value = '';
@@ -549,9 +565,9 @@
       renderSnippetList();
     }
 
-    // 删除指定的代码
+    // 8. 删除代码
     function deleteSnippet(event, id) {
-      if (event && event.stopPropagation) event.stopPropagation();
+      if (event) event.stopPropagation();
       if (confirm('确定要删除这个代码片段吗？')) {
         snippets = snippets.filter(s => s.id !== id);
         saveToStorage();
@@ -563,77 +579,27 @@
       }
     }
 
-    // 点击导出为 docx 文件
-    function exportDocx() {
-      const title = document.getElementById('snippetTitle').value.trim() || '代码片段';
-      const code = document.getElementById('codeEditor').value;
-
-      if (!code) {
-        alert('当前没有可导出的代码！');
-        return;
-      }
-
-      const docContent = `
-        <html xmlns:o='urn:schemas-microsoft-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-        <head>
-          <meta charset='utf-8'>
-          <title>${escapeHtml(title)}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h2 { color: #333; }
-            pre { background: #f4f4f4; padding: 12px; border-radius: 6px; font-family: Consolas, monospace; white-space: pre-wrap; word-wrap: break-word; }
-          </style>
-        </head>
-        <body>
-          <h2>${escapeHtml(title)}</h2>
-          <pre>${escapeHtml(code)}</pre>
-        </body>
-        </html>
-      `;
-
-      const blob = new Blob(['\ufeff' + docContent], { type: 'application/msword' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${title}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    // 渲染预览画面
+    // 9. 更新预览（同步模式底色，保证原生 JS / CSS 动画顺畅运行）
     function updatePreview() {
       const code = document.getElementById('codeEditor').value || '';
       const iframe = document.getElementById('previewFrame');
       
-      if (!iframe) return;
+      // 基础样式注入，确保亮色/夜间模式下的画布背景与页面保持一致
+      const bgStyle = isDarkMode ? '#121212' : '#ffffff';
+      const textStyle = isDarkMode ? '#e2e8f0' : '#0f172a';
+      
+      const injectedBaseCss = `<style>
+        html, body {
+          background-color: ${bgStyle} !important;
+          color: ${textStyle};
+          min-height: 100vh;
+        }
+      </style>`;
 
-      // 补丁逻辑：强制激活 CSS 动画，防止设置了 opacity:0 的海报不显现
-      const patchScript = `
-        <script>
-          window.addEventListener('load', function() {
-            setTimeout(function() {
-              var items = document.querySelectorAll('.yan-anim-item');
-              for(var i=0; i<items.length; i++) { items[i].style.opacity = '1'; }
-              var p = document.getElementById('yan-poster-v30');
-              if(p) p.classList.add('is-visible');
-            }, 100);
-          });
-        <\/script>
-      `;
-
-      try {
-        iframe.srcdoc = code + patchScript;
-      } catch(e) {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        doc.open();
-        doc.write(code + patchScript);
-        doc.close();
-      }
+      iframe.srcdoc = injectedBaseCss + code;
     }
 
-    // 折叠/展开上方代码框
+    // 10. 折叠/展开代码框
     function toggleEditor() {
       const card = document.getElementById('editorCard');
       const btn = document.getElementById('collapseBtn');
@@ -649,24 +615,23 @@
     }
 
     function escapeHtml(str) {
-      return (str || '').replace(/[&<>"']/g, function(match) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[match];
-      });
+      return (str || '').replace(/[&<>"']/g, match => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[match]));
     }
 
-    // 默认初始数据
+    // 初始示例
     function loadDefaultExample() {
-      const defaultSnippet = {
+      const exampleSnippet = {
         id: 'default-1',
-        title: '我的代码片段',
-        code: `<!-- 粘贴你的代码到这里，点击【保存】或【预览效果】 -->`,
+        title: '示例代码',
+        code: `<div style="padding: 20px; text-align: center;">\n  <h3>欢迎使用代码管理器</h3>\n  <p>在此粘贴你的代码并点击预览即可！</p>\n</div>`,
         date: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
       };
-
-      snippets = [defaultSnippet];
+      snippets = [exampleSnippet];
       saveToStorage();
       renderSnippetList();
-      selectSnippet(defaultSnippet.id);
+      selectSnippet(exampleSnippet.id);
     }
   </script>
 </body>
