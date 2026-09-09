@@ -273,7 +273,7 @@
       flex: 1;
       width: 100%;
       height: 100%;
-      overflow: auto;
+      overflow: hidden;
       background: var(--canvas-bg);
       position: relative;
     }
@@ -536,7 +536,7 @@
       }
 
       const docHtml = `
-        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='[http://www.w3.org/TR/REC-html40](http://www.w3.org/TR/REC-html40)'>
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head>
           <meta charset="utf-8">
           <title>${escapeHtml(title)}</title>
@@ -586,7 +586,7 @@
       }
     }
 
-    // 全量彻底剥离 ```html, ```css, ```js 和结尾的 ```
+    // 全量清洗 markdown 块标记
     function cleanCodeForPreview(code) {
       if (!code) return '';
       let cleaned = code.trim();
@@ -604,9 +604,8 @@
 
       const bg = isDarkMode ? '#000000' : '#ffffff';
       const text = isDarkMode ? '#ffffff' : '#000000';
-      const scaledWidth = (100 / currentScale).toFixed(2);
 
-      // 完全还原天然 HTML/CSS 布局，绝不强加 display: flex
+      // 强制使用 Grid 水平垂直绝对居中，基准点置于中心（center center）
       const baseStyle = `<style>
         *, *::before, *::after {
           box-sizing: border-box;
@@ -619,13 +618,17 @@
         }
         body {
           margin: 0;
-          padding: 0;
+          padding: 12px;
+          width: 100%;
           min-height: 100vh;
           background-color: ${bg} !important;
           color: ${text};
+          display: grid;
+          place-items: center;
+          align-content: center;
           transform: scale(${currentScale});
-          transform-origin: 0 0;
-          width: ${scaledWidth}%;
+          transform-origin: center center;
+          overflow: auto;
         }
       </style>`;
 
