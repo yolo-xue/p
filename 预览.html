@@ -1,160 +1,551 @@
-<!DOCTYPE html> <html lang="zh-CN"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <title>代码收集与预览工作台</title> <style> :root { --bg-main: #f8fafc; --bg-card: #ffffff; --border-color: #e2e8f0; --border-focus: #94a3b8; --text-main: #0f172a; --text-muted: #64748b; --primary: #0f172a; --primary-hover: #334155; --danger: #ef4444; --radius: 10px; --iframe-bg: #ffffff; }
-
-/* 夜间模式变量 */ body.dark-mode { --bg-main: #0f172a; --bg-card: #1e293b; --border-color: #334155; --border-focus: #64748b; --text-main: #f8fafc; --text-muted: #94a3b8; --primary: #38bdf8; --primary-hover: #0284c7; --danger: #f87171; --iframe-bg: #121212; }
-
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; transition: background-color 0.3s, color 0.3s; }
-
-/* ---------------- 左侧边栏 ---------------- */ .sidebar { width: 300px; background: var(--bg-card); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; transition: background-color 0.3s, border-color 0.3s; }
-
-.sidebar-header { padding: 16px; border-bottom: 1px solid var(--border-color); }
-
-.sidebar-title { font-size: 15px; font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-
-.search-box { width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid var(--border-color); border-radius: var(--radius); outline: none; background: var(--bg-main); color: var(--text-main); transition: all 0.2s; }
-
-.search-box:focus { border-color: var(--border-focus); }
-
-.snippet-list { flex: 1; overflow-y: auto; padding: 10px; }
-
-.snippet-item { padding: 12px; border-radius: var(--radius); margin-bottom: 8px; border: 1px solid transparent; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); }
-
-.snippet-item:hover, .snippet-item:active { border-color: var(--border-color); }
-
-.snippet-item.active { background: var(--bg-card); border-color: var(--primary); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
-
-.snippet-info { overflow: hidden; flex: 1; padding-right: 8px; }
-
-.snippet-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.snippet-date { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-
-.delete-btn { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 6px 10px; border-radius: 4px; }
-
-.delete-btn:hover { color: var(--danger); background: rgba(239, 68, 68, 0.15); }
-
-/* ---------------- 右侧主区域 ---------------- */ .main-content { flex: 1; display: flex; flex-direction: column; padding: 16px; gap: 16px; overflow: hidden; }
-
-.card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: background-color 0.3s, border-color 0.3s; }
-
-/* 编辑区 */ .editor-card { flex-shrink: 0; transition: all 0.3s ease; }
-
-.card-header { padding: 12px 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); gap: 10px; }
-
-.name-input { font-size: 14px; font-weight: 600; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px; outline: none; flex: 1; max-width: 280px; background: var(--bg-card); color: var(--text-main); }
-
-.btn-group { display: flex; gap: 8px; }
-
-.btn { padding: 8px 14px; font-size: 13px; font-weight: 500; border-radius: 6px; cursor: pointer; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); white-space: nowrap; transition: all 0.2s; }
-
-.btn:hover { border-color: var(--border-focus); }
-
-.btn-primary { background: var(--primary); color: #ffffff; border-color: var(--primary); }
-
-body.dark-mode .btn-primary { color: #0f172a; }
-
-.editor-body { height: 200px; transition: height 0.3s ease; }
-
-.editor-card.collapsed .editor-body { height: 0 !important; overflow: hidden; }
-
-textarea.code-editor { width: 100%; height: 100%; padding: 14px; border: none; outline: none; font-family: "Fira Code", Consolas, Monaco, monospace; font-size: 13px; line-height: 1.5; resize: none; color: var(--text-main); background: var(--bg-card); }
-
-/* 预览区 */ .preview-card { flex: 1; min-height: 250px; }
-
-.preview-title { font-size: 13px; font-weight: 600; color: var(--text-muted); }
-
-.preview-wrapper { flex: 1; width: 100%; height: 100%; overflow: hidden; background: var(--iframe-bg); transition: background-color 0.3s; }
-
-iframe.preview-frame { width: 100%; height: 100%; border: none; overflow-y: auto; }
-
-.empty-tip { text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px 0; }
-
-/* ---------------- 手机端响应式适配 ---------------- */ @media (max-width: 768px) { body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
-
-.sidebar { width: 100%; max-height: 220px; border-right: none; border-bottom: 1px solid var(--border-color); }
-
-.snippet-list { max-height: 120px; }
-
-.main-content { padding: 10px; gap: 12px; overflow: visible; }
-
-.card-header { flex-direction: column; align-items: stretch; }
-
-.name-input { max-width: 100%; width: 100%; }
-
-.btn-group { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-
-.btn { padding: 8px 4px; font-size: 12px; text-align: center; justify-content: center; }
-
-.editor-body { height: 160px; }
-
-.preview-card { height: 460px; min-height: 400px; } } </style> </head> <body>
-
-<!-- 左侧：代码列表与搜索 --> <aside class="sidebar"> <div class="sidebar-header"> <div class="sidebar-title"> <span>我的代码库</span> <div style="display:flex; gap:6px;"> <button class="btn" id="themeBtn" onclick="toggleDarkMode()">🌙 模式</button> <button class="btn" onclick="clearEditor()">+ 新建</button> </div> </div> <input type="text" id="searchInput" class="search-box" placeholder="搜索保存的代码名称..." oninput="renderSnippetList()"> </div> <div class="snippet-list" id="snippetList"></div> </aside>
-
-<!-- 右侧：编辑与预览 --> <main class="main-content">
-
-<!-- 右上方：代码编辑框（可折叠） --> <div class="card editor-card" id="editorCard"> <div class="card-header"> <input type="text" id="snippetTitle" class="name-input" placeholder="输入代码名称..."> <div class="btn-group"> <button class="btn" id="collapseBtn" onclick="toggleEditor()">折叠代码</button> <button class="btn btn-primary" onclick="saveSnippet()">保存代码</button> <button class="btn btn-primary" style="background:#2563eb; border-color:#2563eb; color:#fff;" onclick="updatePreview()">▶ 预览</button> </div> </div> <div class="editor-body" id="editorBody"> <textarea id="codeEditor" class="code-editor" placeholder="在此粘贴你的代码..."></textarea> </div> </div>
-
-<!-- 右下方：预览效果（独立上下滑动） --> <div class="card preview-card"> <div class="card-header"> <span class="preview-title">实时预览效果</span> <button class="btn" id="canvasBgBtn" onclick="toggleCanvasBg()">🎨 切换画布背景 (深/浅)</button> </div> <div class="preview-wrapper" id="previewWrapper"> <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe> </div> </div>
-
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>代码收集与预览工作台</title>
+<style>
+:root {
+--bg-main: #f8fafc;
+--bg-card: #ffffff;
+--border-color: #e2e8f0;
+--border-focus: #94a3b8;
+--text-main: #0f172a;
+--text-muted: #64748b;
+--primary: #0f172a;
+--danger: #ef4444;
+--radius: 10px;
+--canvas-bg: #121212;
+}
+body.dark-mode {
+--bg-main: #0f172a;
+--bg-card: #1e293b;
+--border-color: #334155;
+--border-focus: #64748b;
+--text-main: #f8fafc;
+--text-muted: #94a3b8;
+--primary: #38bdf8;
+--danger: #f87171;
+}
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+-webkit-tap-highlight-color: transparent;
+}
+body {
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+background-color: var(--bg-main);
+color: var(--text-main);
+height: 100vh;
+display: flex;
+overflow: hidden;
+}
+/* 左侧边栏 */
+.sidebar {
+width: 300px;
+background: var(--bg-card);
+border-right: 1px solid var(--border-color);
+display: flex;
+flex-direction: column;
+flex-shrink: 0;
+}
+.sidebar-header {
+padding: 14px;
+border-bottom: 1px solid var(--border-color);
+}
+.sidebar-title {
+font-size: 15px;
+font-weight: 600;
+margin-bottom: 10px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.search-box {
+width: 100%;
+padding: 8px 12px;
+font-size: 13px;
+border: 1px solid var(--border-color);
+border-radius: var(--radius);
+outline: none;
+background: var(--bg-main);
+color: var(--text-main);
+}
+.snippet-list {
+flex: 1;
+overflow-y: auto;
+padding: 10px;
+}
+.snippet-item {
+padding: 10px 12px;
+border-radius: var(--radius);
+margin-bottom: 8px;
+border: 1px solid transparent;
+cursor: pointer;
+display: flex;
+justify-content: space-between;
+align-items: center;
+background: var(--bg-main);
+}
+.snippet-item.active {
+background: var(--bg-card);
+border-color: var(--primary);
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.snippet-info {
+overflow: hidden;
+flex: 1;
+padding-right: 6px;
+}
+.snippet-name {
+font-size: 13px;
+font-weight: 500;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.snippet-date {
+font-size: 11px;
+color: var(--text-muted);
+margin-top: 2px;
+}
+.delete-btn {
+background: none;
+border: none;
+color: var(--text-muted);
+font-size: 15px;
+cursor: pointer;
+padding: 4px 8px;
+}
+.delete-btn:hover {
+color: var(--danger);
+}
+/* 右侧主区域 */
+.main-content {
+flex: 1;
+display: flex;
+flex-direction: column;
+padding: 12px;
+gap: 12px;
+overflow: hidden;
+}
+.card {
+background: var(--bg-card);
+border: 1px solid var(--border-color);
+border-radius: var(--radius);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+/* 编辑区 */
+.editor-card {
+flex-shrink: 0;
+}
+.card-header {
+padding: 10px 12px;
+border-bottom: 1px solid var(--border-color);
+display: flex;
+justify-content: space-between;
+align-items: center;
+background: var(--bg-main);
+gap: 8px;
+}
+.name-input {
+font-size: 13px;
+font-weight: 600;
+border: 1px solid var(--border-color);
+padding: 6px 10px;
+border-radius: 6px;
+outline: none;
+flex: 1;
+max-width: 260px;
+background: var(--bg-card);
+color: var(--text-main);
+}
+.btn-group {
+display: flex;
+gap: 6px;
+}
+.btn {
+padding: 6px 12px;
+font-size: 12px;
+font-weight: 500;
+border-radius: 6px;
+cursor: pointer;
+border: 1px solid var(--border-color);
+background: var(--bg-card);
+color: var(--text-main);
+white-space: nowrap;
+}
+.btn-primary {
+background: #2563eb;
+color: #ffffff;
+border-color: #2563eb;
+}
+.editor-body {
+height: 180px;
+transition: height 0.25s ease;
+}
+.editor-card.collapsed .editor-body {
+height: 0 !important;
+overflow: hidden;
+}
+textarea.code-editor {
+width: 100%;
+height: 100%;
+padding: 12px;
+border: none;
+outline: none;
+font-family: Consolas, Monaco, monospace;
+font-size: 12px;
+line-height: 1.4;
+resize: none;
+color: var(--text-main);
+background: var(--bg-card);
+}
+/* 预览区 */
+.preview-card {
+flex: 1;
+min-height: 250px;
+}
+.preview-wrapper {
+flex: 1;
+width: 100%;
+height: 100%;
+background: var(--canvas-bg);
+overflow: hidden;
+}
+iframe.preview-frame {
+width: 100%;
+height: 100%;
+border: none;
+display: block;
+}
+/* 手机端适配 */
+@media (max-width: 768px) {
+body {
+flex-direction: column;
+height: auto;
+min-height: 100vh;
+overflow-y: auto;
+}
+.sidebar {
+width: 100%;
+max-height: 200px;
+border-right: none;
+border-bottom: 1px solid var(--border-color);
+}
+.snippet-list {
+max-height: 110px;
+}
+.main-content {
+padding: 8px;
+gap: 8px;
+}
+.card-header {
+flex-direction: column;
+align-items: stretch;
+}
+.name-input {
+max-width: 100%;
+}
+.btn-group {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+}
+.btn {
+text-align: center;
+padding: 6px 2px;
+}
+.preview-card {
+height: 480px;
+}
+}
+</style>
+</head>
+<body>
+<!-- 左侧：代码列表与搜索 -->
+<aside class="sidebar">
+<div class="sidebar-header">
+<div class="sidebar-title">
+<span>代码收集库</span>
+<div style="display:flex; gap:4px;">
+<button class="btn" onclick="toggleDarkMode()">🌙 模式</button>
+<button class="btn" onclick="clearEditor()">+ 新建</button>
+</div>
+</div>
+<input type="text" id="searchInput" class="search-box" placeholder="搜索保存的代码..." oninput="renderSnippetList()">
+</div>
+<div class="snippet-list" id="snippetList"></div>
+</aside>
+<!-- 右侧：编辑与预览 -->
+<main class="main-content">
+<!-- 右上方：代码编辑框 -->
+<div class="card editor-card" id="editorCard">
+<div class="card-header">
+<input type="text" id="snippetTitle" class="name-input" placeholder="代码名称...">
+<div class="btn-group">
+<button class="btn" id="collapseBtn" onclick="toggleEditor()">折叠代码</button>
+<button class="btn" style="background:#16a34a; color:#fff; border-color:#16a34a;" onclick="saveSnippet()">保存代码</button>
+<button class="btn btn-primary" onclick="updatePreview()">▶ 运行预览</button>
+</div>
+</div>
+<div class="editor-body" id="editorBody">
+<textarea id="codeEditor" class="code-editor" placeholder="粘贴你的代码..."></textarea>
+</div>
+</div>
+<!-- 右下方：预览效果 -->
+<div class="card preview-card">
+<div class="card-header">
+<span style="font-size:12px; font-weight:600; color:var(--text-muted);">实时效果预览</span>
+<button class="btn" onclick="toggleCanvasBg()">🎨 切换画布背景 (黑/白)</button>
+</div>
+<div class="preview-wrapper">
+<iframe id="previewFrame" class="preview-frame"></iframe>
+</div>
+</div>
 </main>
-
-<script> const STORAGE_KEY = 'my_saved_code_snippets'; let snippets = []; let currentId = null; let isCollapsed = false; let isDarkCanvas = true; // 默认给深色画布，完美兼容白字海报
-
-window.onload = () => { loadSnippets(); if (snippets.length === 0) { loadDefaultExample(); } else { renderSnippetList(); selectSnippet(snippets[0].id); } };
-
-function toggleDarkMode() { document.body.classList.toggle('dark-mode'); const isDark = document.body.classList.contains('dark-mode'); document.getElementById('themeBtn').textContent = isDark ? '☀️ 亮色' : '🌙 夜间'; }
-
-function toggleCanvasBg() { isDarkCanvas = !isDarkCanvas; applyCanvasBg(); }
-
-function applyCanvasBg() { const wrapper = document.getElementById('previewWrapper'); wrapper.style.backgroundColor = isDarkCanvas ? '#121212' : '#ffffff'; }
-
-function loadSnippets() { const data = localStorage.getItem(STORAGE_KEY); snippets = data ? JSON.parse(data) : []; }
-
-function saveToStorage() { localStorage.setItem(STORAGE_KEY, JSON.stringify(snippets)); }
-
-function renderSnippetList() { const keyword = document.getElementById('searchInput').value.toLowerCase().trim(); const listContainer = document.getElementById('snippetList'); listContainer.innerHTML = '';
-
+<script>
+const STORAGE_KEY = 'my_code_snippets_db_v2';
+let snippets = [];
+let currentId = null;
+let isCollapsed = false;
+let isDarkCanvas = true;
+// 初始化页面
+window.addEventListener('load', () => {
+loadSnippets();
+if (snippets.length === 0) {
+loadDefaultExample();
+} else {
+renderSnippetList();
+selectSnippet(snippets[0].id);
+}
+});
+function toggleDarkMode() {
+document.body.classList.toggle('dark-mode');
+}
+function toggleCanvasBg() {
+isDarkCanvas = !isDarkCanvas;
+updatePreview();
+}
+function loadSnippets() {
+try {
+const data = localStorage.getItem(STORAGE_KEY);
+snippets = data ? JSON.parse(data) : [];
+} catch (e) {
+snippets = [];
+}
+}
+function saveToStorage() {
+localStorage.setItem(STORAGE_KEY, JSON.stringify(snippets));
+}
+function renderSnippetList() {
+const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+const listContainer = document.getElementById('snippetList');
+listContainer.innerHTML = '';
 const filtered = snippets.filter(item => item.title.toLowerCase().includes(keyword));
-
-if (filtered.length === 0) { listContainer.innerHTML = '<div class="empty-tip">无匹配代码</div>'; return; }
-
-filtered.forEach(item => { const div = document.createElement('div'); div.className = snippet-item ${item.id === currentId ? 'active' : ''}; div.onclick = () => selectSnippet(item.id);
-
-div.innerHTML = <div class="snippet-info"> <div class="snippet-name">${escapeHtml(item.title || '未命名代码')}</div> <div class="snippet-date">${item.date}</div> </div> <button class="delete-btn" onclick="deleteSnippet(event, '${item.id}')">✕</button>; listContainer.appendChild(div); }); }
-
-function selectSnippet(id) { const item = snippets.find(s => s.id === id); if (!item) return;
-
-currentId = item.id; document.getElementById('snippetTitle').value = item.title; document.getElementById('codeEditor').value = item.code;
-
-renderSnippetList(); updatePreview(); }
-
-function saveSnippet() { const title = document.getElementById('snippetTitle').value.trim() || '未命名代码'; const code = document.getElementById('codeEditor').value; const date = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-
-if (currentId) { const index = snippets.findIndex(s => s.id === currentId); if (index !== -1) snippets[index] = { ...snippets[index], title, code, date }; } else { const newSnippet = { id: Date.now().toString(), title, code, date }; snippets.unshift(newSnippet); currentId = newSnippet.id; }
-
-saveToStorage(); renderSnippetList(); updatePreview(); alert('保存成功！'); }
-
-function clearEditor() { currentId = null; document.getElementById('snippetTitle').value = ''; document.getElementById('codeEditor').value = ''; document.getElementById('previewFrame').srcdoc = ''; renderSnippetList(); }
-
-function deleteSnippet(event, id) { event.stopPropagation(); if (confirm('确定要删除这个代码片段吗？')) { snippets = snippets.filter(s => s.id !== id); saveToStorage(); if (currentId === id) clearEditor(); else renderSnippetList(); } }
-
-function updatePreview() { const code = document.getElementById('codeEditor').value; const iframe = document.getElementById('previewFrame');
-
-applyCanvasBg();
-
-// 给 iframe 注入自动激活动画的微型逻辑，防止透明度为 0 不显示 const injectionScript = <script> window.addEventListener('DOMContentLoaded', () => { document.querySelectorAll('.yan-anim-item').forEach(el => el.style.opacity = '1'); const poster = document.getElementById('yan-poster-v30'); if (poster) poster.classList.add('is-visible'); }); <\/script>;
-
-iframe.srcdoc = code + injectionScript; }
-
-function toggleEditor() { const card = document.getElementById('editorCard'); const btn = document.getElementById('collapseBtn'); isCollapsed = !isCollapsed;
-
-if (isCollapsed) { card.classList.add('collapsed'); btn.textContent = '展开代码'; } else { card.classList.remove('collapsed'); btn.textContent = '折叠代码'; } }
-
-function escapeHtml(str) { return str.replace(/[&<>"']/g, match => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' }[match])); }
-
-function loadDefaultExample() { const defaultSnippet = { id: 'default-1', title: '示例：唯美黑夜海报卡片', code: <!-- 此处默认可粘贴你的海报代码 -->, date: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) };
-
-snippets.push(defaultSnippet); saveToStorage(); renderSnippetList(); } </script> </body> </html>
-
+if (filtered.length === 0) {
+listContainer.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:12px; padding:20px 0;">无匹配代码</div>';
+return;
+}
+filtered.forEach(item => {
+const div = document.createElement('div');
+div.className = snippet-item ${item.id === currentId ? 'active' : ''};
+div.onclick = () => selectSnippet(item.id);
+div.innerHTML = <div class="snippet-info"> <div class="snippet-name">${escapeHtml(item.title || '未命名代码')}</div> <div class="snippet-date">${item.date}</div> </div> <button class="delete-btn" onclick="deleteSnippet(event, '${item.id}')">✕</button>;
+listContainer.appendChild(div);
+});
+}
+function selectSnippet(id) {
+const item = snippets.find(s => s.id === id);
+if (!item) return;
+currentId = item.id;
+document.getElementById('snippetTitle').value = item.title;
+document.getElementById('codeEditor').value = item.code;
+renderSnippetList();
+updatePreview();
+}
+function saveSnippet() {
+const title = document.getElementById('snippetTitle').value.trim() || '未命名代码';
+const code = document.getElementById('codeEditor').value;
+const date = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+if (currentId) {
+const index = snippets.findIndex(s => s.id === currentId);
+if (index !== -1) snippets[index] = { ...snippets[index], title, code, date };
+} else {
+const newSnippet = { id: Date.now().toString(), title, code, date };
+snippets.unshift(newSnippet);
+currentId = newSnippet.id;
+}
+saveToStorage();
+renderSnippetList();
+updatePreview();
+alert('保存成功！');
+}
+function clearEditor() {
+currentId = null;
+document.getElementById('snippetTitle').value = '';
+document.getElementById('codeEditor').value = '';
+const iframe = document.getElementById('previewFrame');
+const doc = iframe.contentDocument || iframe.contentWindow.document;
+doc.open();
+doc.write('');
+doc.close();
+renderSnippetList();
+}
+function deleteSnippet(event, id) {
+event.stopPropagation();
+if (confirm('确定要删除这个代码吗？')) {
+snippets = snippets.filter(s => s.id !== id);
+saveToStorage();
+if (currentId === id) clearEditor();
+else renderSnippetList();
+}
+}
+// 核心修复：采用无阻拦渲染技术
+function updatePreview() {
+const code = document.getElementById('codeEditor').value;
+const iframe = document.getElementById('previewFrame');
+const doc = iframe.contentDocument || iframe.contentWindow.document;
+const bg = isDarkCanvas ? '#121212' : '#ffffff';
+doc.open();
+doc.write(<!DOCTYPE html> <html> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <style> body { margin: 0; padding: 10px; background-color: ${bg}; min-height: 100vh; box-sizing: border-box; } /* 确保动画强制直接显示 */ .yan-anim-item { opacity: 1 !important; } #yan-poster-v30 { opacity: 1 !important; } </style> </head> <body> ${code} </body> </html>);
+doc.close();
+}
+function toggleEditor() {
+const card = document.getElementById('editorCard');
+const btn = document.getElementById('collapseBtn');
+isCollapsed = !isCollapsed;
+if (isCollapsed) {
+card.classList.add('collapsed');
+btn.textContent = '展开代码';
+} else {
+card.classList.remove('collapsed');
+btn.textContent = '折叠代码';
+}
+}
+function escapeHtml(str) {
+return str.replace(/[&<>"']/g, match => ({
+'&': '&', '<': '<', '>': '>', '"': '"', "'": '''
+}[match]));
+}
+function loadDefaultExample() {
+const defaultCode = `<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+.yan-poster-container {
+width: 100%;
+height: 410px !important;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+color: #e2e8f0;
+position: relative;
+overflow: hidden;
+padding: 24px 0;
+box-sizing: border-box;
+text-shadow: 0 0 1px rgba(226, 232, 240, 0.15);
+display: flex;
+flex-direction: column;
+}
+.yan-anim-item { opacity: 1 !important; }
+.yan-circle-wrap {
+position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; z-index: 1;
+}
+.yan-circle-1 { position: absolute; width: 160px; height: 160px; border: 1px dashed rgba(226,232,240,0.12); border-radius: 50%; top: -60px; right: -20px; }
+.yan-circle-2 { position: absolute; width: 90px; height: 90px; border: 1.5px solid rgba(226,232,240,0.15); border-radius: 50%; top: -15px; left: -30px; }
+.yan-row-1 {
+display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px; margin-bottom: 36px; z-index: 2;
+}
+.yan-text-xl { font-size: 60px; font-weight: 800; letter-spacing: -3px; line-height: 0.9; }
+.yan-text-md { font-size: 25px; font-weight: 600; }
+.yan-text-sm { font-size: 17px; font-weight: 400; position: relative; }
+.yan-gradient-text {
+margin-left: 32px; font-size: 14px;
+background: linear-gradient(90deg, #e2e8f0 0%, rgba(226, 232, 240, 0) 100%);
+-webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 4px;
+}
+.yan-row-2 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; z-index: 2; }
+.yan-mag-left { flex: 1; padding-right: 24px; display: flex; flex-direction: column; }
+.yan-mag-header { display: flex; align-items: center; width: 100%; margin-bottom: 12px; gap: 10px; }
+.yan-line-left, .yan-line-right { flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgba(226, 232, 240, 0.35)); }
+.yan-reflect-title {
+font-family: 'Playfair Display', serif; font-size: 8px; letter-spacing: 3px; color: rgba(255, 255, 255, 0.85); text-transform: uppercase;
+}
+.yan-mag-eng {
+font-family: 'Playfair Display', serif; font-size: 10px; line-height: 1.4; opacity: 0.85; height: 40px; overflow-y: auto; padding-right: 6px;
+}
+.yan-sub-sign { font-size: 7px; letter-spacing: 7px; opacity: 0.7; text-transform: uppercase; margin-top: 14px; font-weight: 700; }
+.yan-time-input-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.yan-flip-wrapper { display: flex; align-items: center; gap: 4px; opacity: 0.9; }
+.yan-flip-box { background: rgba(255, 255, 255, 0.04); border: 0.5px solid rgba(226, 232, 240, 0.15); border-radius: 4px; padding: 3px 5px; font-size: 10px; }
+.yan-chat-input-mini {
+display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.04); border: 0.5px solid rgba(226, 232, 240, 0.15); border-radius: 14px; padding: 4px 8px; width: 145px;
+}
+.yan-chat-input-text { flex: 1; font-size: 7px; color: rgba(255, 255, 255, 0.85); white-space: nowrap; overflow: hidden; }
+.yan-row-3 { display: flex; gap: 16px; align-items: flex-start; width: 100%; flex: 1; z-index: 2; }
+.yan-profiles-wrapper { display: flex; gap: 13px; }
+.yan-profile-box { width: 90px; height: 120px; border: 0.5px solid rgba(226, 232, 240, 0.25); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.yan-profile-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+.yan-profile-name { font-size: 10px; font-weight: 600; }
+.yan-profile-tag { font-size: 7px; padding: 2px 6px; border: 1px solid rgba(226,232,240,0.4); border-radius: 10px; }
+</style>
+<div class="yan-poster-container" id="yan-poster-v30">
+<div class="yan-circle-wrap">
+<div class="yan-circle-1"></div>
+<div class="yan-circle-2"></div>
+</div>
+<div class="yan-row-1">
+<span class="yan-text-xl">永远</span>
+<span class="yan-text-md">是</span>
+<span class="yan-text-sm">多远</span>
+<span class="yan-gradient-text">我只要明天</span>
+</div>
+<div class="yan-row-2">
+<div class="yan-mag-left">
+<div class="yan-mag-header">
+<div class="yan-line-left"></div>
+<span class="yan-reflect-title">Memories</span>
+<div class="yan-line-right"></div>
+</div>
+<div class="yan-mag-eng">Eternity is not a distance, but a choice we make in the chaos of time. Every second beside you is the only reality I desire.</div>
+<div class="yan-sub-sign">天南地北 我陪你走</div>
+<div class="yan-time-input-row">
+<div class="yan-flip-wrapper">
+<div class="yan-flip-box">13</div>
+<span>:</span>
+<div class="yan-flip-box">14</div>
+</div>
+<div class="yan-chat-input-mini">
+<div class="yan-chat-input-text">离开前请叫醒我</div>
+</div>
+</div>
+</div>
+</div>
+<div class="yan-row-3">
+<div class="yan-profiles-wrapper">
+<div class="yan-profile-box">
+<img src="https://xland.eu.org/autoupload/sk03g/20260909/liMU/1290X1290/IMG_8128.jpeg" class="yan-profile-avatar">
+<span class="yan-profile-name">未命名</span>
+<span class="yan-profile-tag">TAG</span>
+</div>
+<div class="yan-profile-box">
+<img src="https://xland.eu.org/autoupload/sk03g/20260909/WOu3/1290X1290/IMG_8129.jpeg" class="yan-profile-avatar">
+<span class="yan-profile-name">未命名</span>
+<span class="yan-profile-tag">TAG</span>
+</div>
+</div>
+</div>
+</div>`;
+const defaultSnippet = {
+id: 'default-1',
+title: '唯美黑夜海报卡片',
+code: defaultCode,
+date: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+};
+snippets.push(defaultSnippet);
+saveToStorage();
+renderSnippetList();
+selectSnippet(defaultSnippet.id);
+}
+</script>
+</body>
+</html>
