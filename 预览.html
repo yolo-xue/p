@@ -6,29 +6,31 @@
   <title>代码收集与预览工作台</title>
   <style>
     :root {
-      --bg-main: #f8fafc;
+      --bg-main: #ffffff;
       --bg-card: #ffffff;
-      --border-color: #e2e8f0;
-      --border-focus: #94a3b8;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --primary: #0f172a;
-      --danger: #ef4444;
-      --radius: 8px;
-      --iframe-bg: #ffffff;
+      --border-color: #cccccc;
+      --border-focus: #000000;
+      --text-main: #000000;
+      --text-muted: #666666;
+      --btn-bg: #ffffff;
+      --btn-text: #000000;
+      --btn-border: #000000;
+      --btn-hover: #f0f0f0;
+      --canvas-bg: #ffffff;
     }
 
-    /* 纯黑夜间模式 */
     body.dark-mode {
       --bg-main: #000000;
-      --bg-card: #121212;
-      --border-color: #262626;
-      --border-focus: #404040;
+      --bg-card: #000000;
+      --border-color: #333333;
+      --border-focus: #ffffff;
       --text-main: #ffffff;
       --text-muted: #888888;
-      --primary: #2563eb;
-      --danger: #f87171;
-      --iframe-bg: #000000;
+      --btn-bg: #000000;
+      --btn-text: #ffffff;
+      --btn-border: #ffffff;
+      --btn-hover: #1a1a1a;
+      --canvas-bg: #000000;
     }
 
     * {
@@ -45,31 +47,28 @@
       height: 100vh;
       display: flex;
       overflow: hidden;
-      transition: background-color 0.2s, color 0.2s;
     }
 
-    /* ---------------- 左侧边栏 ---------------- */
     .sidebar {
-      width: 290px;
+      width: 260px;
       background: var(--bg-card);
       border-right: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
       height: 100vh;
-      transition: background-color 0.2s, border-color 0.2s;
     }
 
     .sidebar-header {
-      padding: 12px;
+      padding: 10px;
       border-bottom: 1px solid var(--border-color);
       flex-shrink: 0;
     }
 
     .sidebar-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -77,12 +76,11 @@
 
     .search-box {
       width: 100%;
-      padding: 7px 10px;
-      font-size: 13px;
+      padding: 5px 8px;
+      font-size: 12px;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius);
       outline: none;
-      background: var(--bg-main);
+      background: var(--bg-card);
       color: var(--text-main);
     }
 
@@ -90,34 +88,22 @@
       border-color: var(--border-focus);
     }
 
-    /* 紧凑细小的保存文件列表（支持上下独立滚动） */
     .snippet-list {
       flex: 1;
       overflow-y: auto;
-      padding: 8px;
+      padding: 6px;
     }
 
-    .snippet-list::-webkit-scrollbar {
-      width: 4px;
-    }
-    .snippet-list::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 4px;
-    }
-
-    /* 变细的文件卡片框 */
     .snippet-item {
-      padding: 6px 10px;
-      min-height: 38px;
-      border-radius: 6px;
+      padding: 6px 8px;
       margin-bottom: 4px;
-      border: 1px solid transparent;
+      border: 1px solid var(--border-color);
       cursor: pointer;
-      transition: all 0.15s ease;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: var(--bg-main);
+      background: var(--bg-card);
+      font-size: 12px;
     }
 
     .snippet-item:hover {
@@ -125,59 +111,49 @@
     }
 
     .snippet-item.active {
-      background: var(--bg-card);
-      border-color: var(--primary);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      border-color: var(--border-focus);
+      background: var(--btn-hover);
+      font-weight: bold;
     }
 
     .snippet-info {
       overflow: hidden;
       flex: 1;
-      padding-right: 6px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
     }
 
     .snippet-name {
-      font-size: 13px;
-      font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      line-height: 1.2;
     }
 
     .snippet-date {
       font-size: 10px;
       color: var(--text-muted);
       margin-top: 2px;
-      line-height: 1;
     }
 
     .delete-btn {
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 13px;
+      font-size: 11px;
       cursor: pointer;
-      padding: 2px 6px;
-      border-radius: 4px;
-      flex-shrink: 0;
+      padding: 2px 4px;
+      margin-left: 6px;
     }
 
     .delete-btn:hover {
-      color: var(--danger);
-      background: rgba(239, 68, 68, 0.15);
+      color: var(--text-main);
+      text-decoration: underline;
     }
 
-    /* ---------------- 右侧主区域 ---------------- */
     .main-content {
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 12px;
-      gap: 12px;
+      padding: 10px;
+      gap: 10px;
       overflow: hidden;
       height: 100vh;
     }
@@ -185,41 +161,39 @@
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: var(--radius);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: background-color 0.2s, border-color 0.2s;
     }
 
     .editor-card {
       flex-shrink: 0;
-      transition: all 0.25s ease;
     }
 
     .card-header {
-      padding: 8px 12px;
+      padding: 8px 10px;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: var(--bg-main);
       gap: 8px;
       flex-wrap: wrap;
     }
 
     .name-input {
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 12px;
       border: 1px solid var(--border-color);
-      padding: 6px 10px;
-      border-radius: 5px;
+      padding: 5px 8px;
       outline: none;
       flex: 1;
-      min-width: 150px;
+      min-width: 140px;
       max-width: 220px;
       background: var(--bg-card);
       color: var(--text-main);
+    }
+
+    .name-input:focus {
+      border-color: var(--border-focus);
     }
 
     .btn-group {
@@ -229,35 +203,25 @@
     }
 
     .btn {
-      padding: 6px 10px;
+      padding: 5px 10px;
       font-size: 12px;
-      font-weight: 500;
-      border-radius: 5px;
       cursor: pointer;
-      border: 1px solid var(--border-color);
-      background: var(--bg-card);
-      color: var(--text-main);
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-text);
       white-space: nowrap;
-      transition: all 0.15s;
     }
 
     .btn:hover {
-      border-color: var(--border-focus);
+      background: var(--btn-hover);
     }
 
     .btn:active {
-      transform: scale(0.97);
-    }
-
-    .btn-primary {
-      background: #2563eb;
-      color: #ffffff;
-      border-color: #2563eb;
+      opacity: 0.7;
     }
 
     .editor-body {
       height: 180px;
-      transition: height 0.25s ease;
     }
 
     .editor-card.collapsed .editor-body {
@@ -268,12 +232,12 @@
     textarea.code-editor {
       width: 100%;
       height: 100%;
-      padding: 10px;
+      padding: 8px;
       border: none;
       outline: none;
-      font-family: "Fira Code", Consolas, Monaco, monospace;
-      font-size: 13px;
-      line-height: 1.45;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+      line-height: 1.4;
       resize: none;
       color: var(--text-main);
       background: var(--bg-card);
@@ -286,8 +250,7 @@
 
     .preview-title {
       font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
+      font-weight: bold;
     }
 
     .preview-wrapper {
@@ -295,8 +258,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: var(--iframe-bg);
-      transition: background-color 0.2s;
+      background: var(--canvas-bg);
     }
 
     iframe.preview-frame {
@@ -304,14 +266,13 @@
       height: 100%;
       border: none;
       display: block;
-      background-color: var(--iframe-bg);
     }
 
     .empty-tip {
       text-align: center;
       color: var(--text-muted);
       font-size: 12px;
-      padding: 16px 0;
+      padding: 12px 0;
     }
 
     @media (max-width: 768px) {
@@ -325,7 +286,7 @@
       .sidebar {
         width: 100%;
         height: auto;
-        max-height: 200px;
+        max-height: 180px;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
       }
@@ -350,7 +311,7 @@
       .btn-group {
         width: 100%;
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 4px;
       }
 
@@ -366,45 +327,40 @@
 </head>
 <body>
 
-  <!-- 左侧：已保存代码文件列表（细卡片） -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-title">
-        <span>我的代码库</span>
+        <span>代码列表</span>
         <div style="display:flex; gap:4px;">
-          <button type="button" class="btn" id="themeBtn" onclick="toggleDarkMode()">🌙 夜间</button>
-          <button type="button" class="btn" onclick="clearEditor()">+ 新建</button>
+          <button type="button" class="btn" id="themeBtn" onclick="toggleDarkMode()">夜间模式</button>
+          <button type="button" class="btn" onclick="clearEditor()">新建</button>
         </div>
       </div>
-      <input type="text" id="searchInput" class="search-box" placeholder="搜索已保存的文件..." oninput="renderSnippetList()">
+      <input type="text" id="searchInput" class="search-box" placeholder="搜索文件..." oninput="renderSnippetList()">
     </div>
     <div class="snippet-list" id="snippetList"></div>
   </aside>
 
-  <!-- 右侧：工作区 -->
   <main class="main-content">
     
-    <!-- 代码编辑区 -->
     <div class="card editor-card" id="editorCard">
       <div class="card-header">
-        <input type="text" id="snippetTitle" class="name-input" placeholder="输入文件名称...">
+        <input type="text" id="snippetTitle" class="name-input" placeholder="代码标题...">
         <div class="btn-group">
           <button type="button" class="btn" id="collapseBtn" onclick="toggleEditor()">折叠代码框</button>
-          <button type="button" class="btn" onclick="exportDocx()">📄 导出 docx</button>
-          <button type="button" class="btn" onclick="saveAsNewSnippet()">➕ 存为新代码</button>
-          <button type="button" class="btn" style="background:#059669; color:#fff; border-color:#059669;" onclick="saveSnippet()">💾 保存修改</button>
-          <button type="button" class="btn btn-primary" onclick="updatePreview()">▶ 运行预览</button>
+          <button type="button" class="btn" onclick="exportDocx()">导出 docx</button>
+          <button type="button" class="btn" onclick="saveSnippet()">保存代码</button>
+          <button type="button" class="btn" onclick="updatePreview()">运行预览</button>
         </div>
       </div>
       <div class="editor-body" id="editorBody">
-        <textarea id="codeEditor" class="code-editor" placeholder="在此粘贴你的代码..."></textarea>
+        <textarea id="codeEditor" class="code-editor" placeholder="在此粘贴 HTML/CSS/JS 代码..."></textarea>
       </div>
     </div>
 
-    <!-- 实时预览区 -->
     <div class="card preview-card" id="previewCard">
       <div class="card-header">
-        <span class="preview-title">实时预览效果</span>
+        <span class="preview-title">实时预览</span>
       </div>
       <div class="preview-wrapper">
         <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
@@ -414,7 +370,7 @@
   </main>
 
   <script>
-    const STORAGE_KEY = 'my_code_workspace_v3';
+    const STORAGE_KEY = 'workspace_saved_snippets';
     let snippets = [];
     let currentId = null;
     let isCollapsed = false;
@@ -430,19 +386,18 @@
       }
     });
 
-    // 1. 夜间模式切换（纯黑背景）
     function toggleDarkMode() {
       isDarkMode = !isDarkMode;
       if (isDarkMode) {
         document.body.classList.add('dark-mode');
-        document.getElementById('themeBtn').textContent = '☀️ 亮色';
+        document.getElementById('themeBtn').textContent = '日间模式';
       } else {
         document.body.classList.remove('dark-mode');
-        document.getElementById('themeBtn').textContent = '🌙 夜间';
+        document.getElementById('themeBtn').textContent = '夜间模式';
       }
+      updatePreview();
     }
 
-    // 2. 本地数据安全存储
     function loadSnippets() {
       try {
         const data = localStorage.getItem(STORAGE_KEY);
@@ -456,11 +411,10 @@
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(snippets));
       } catch (e) {
-        console.warn('存储受限', e);
+        console.warn('存储受限');
       }
     }
 
-    // 3. 渲染细致紧凑的代码列表
     function renderSnippetList() {
       const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
       const listContainer = document.getElementById('snippetList');
@@ -469,29 +423,28 @@
       const filtered = snippets.filter(item => (item.title || '').toLowerCase().includes(keyword));
 
       if (filtered.length === 0) {
-        listContainer.innerHTML = '<div class="empty-tip">暂无保存的代码</div>';
+        listContainer.innerHTML = '<div class="empty-tip">暂无文件</div>';
         return;
       }
 
       filtered.forEach(item => {
         const div = document.createElement('div');
-        div.className = `snippet-item ${item.id === currentId ? 'active' : ''}`;
+        div.className = `snippet-item ${String(item.id) === String(currentId) ? 'active' : ''}`;
         div.onclick = () => selectSnippet(item.id);
 
         div.innerHTML = `
           <div class="snippet-info">
             <div class="snippet-name">${escapeHtml(item.title || '未命名文件')}</div>
-            <div class="snippet-date">${item.date || ''}</div>
+            <div class="snippet-date">${item.date}</div>
           </div>
-          <button type="button" class="delete-btn" onclick="deleteSnippet(event, '${item.id}')" title="删除">✕</button>
+          <button type="button" class="delete-btn" onclick="deleteSnippet(event, '${item.id}')">删除</button>
         `;
         listContainer.appendChild(div);
       });
     }
 
-    // 4. 点击列表调取代码并渲染
     function selectSnippet(id) {
-      const item = snippets.find(s => s.id === id);
+      const item = snippets.find(s => String(s.id) === String(id));
       if (!item) return;
 
       currentId = item.id;
@@ -506,72 +459,61 @@
       }
     }
 
-    // 5. 强行【存为新代码】（无论如何都不覆盖原有文件）
-    function saveAsNewSnippet() {
-      const title = document.getElementById('snippetTitle').value.trim() || '未命名代码';
-      const code = document.getElementById('codeEditor').value;
-      const date = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-
-      const newId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4);
-      const newSnippet = { id: newId, title, code, date };
-
-      snippets.unshift(newSnippet);
-      currentId = newId;
-
-      saveToStorage();
-      renderSnippetList();
-      updatePreview();
-      alert('已作为新文件保存！');
-    }
-
-    // 6. 保存修改（如果当前无选中则自动存为新代码）
     function saveSnippet() {
-      if (!currentId) {
-        saveAsNewSnippet();
+      const titleInput = document.getElementById('snippetTitle').value.trim();
+      const codeInput = document.getElementById('codeEditor').value;
+
+      if (!titleInput && !codeInput) {
+        alert('请输入标题或代码后再保存');
         return;
       }
 
-      const title = document.getElementById('snippetTitle').value.trim() || '未命名代码';
-      const code = document.getElementById('codeEditor').value;
+      const title = titleInput || '未命名代码';
+      const code = codeInput;
       const date = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 
-      const index = snippets.findIndex(s => s.id === currentId);
-      if (index !== -1) {
-        snippets[index] = { ...snippets[index], title, code, date };
+      if (currentId !== null && currentId !== undefined && currentId !== '') {
+        const index = snippets.findIndex(s => String(s.id) === String(currentId));
+        if (index !== -1) {
+          snippets[index] = { ...snippets[index], title, code, date };
+        } else {
+          const newSnippet = { id: Date.now().toString(), title, code, date };
+          snippets.unshift(newSnippet);
+          currentId = newSnippet.id;
+        }
       } else {
-        snippets.unshift({ id: currentId, title, code, date });
+        const newSnippet = { id: Date.now().toString(), title, code, date };
+        snippets.unshift(newSnippet);
+        currentId = newSnippet.id;
       }
 
       saveToStorage();
       renderSnippetList();
       updatePreview();
-      alert('当前修改已保存！');
     }
 
-    // 7. 导出 docx
     function exportDocx() {
       const title = document.getElementById('snippetTitle').value.trim() || '代码文件';
       const code = document.getElementById('codeEditor').value;
 
       if (!code) {
-        alert('没有可导出的代码！');
+        alert('无代码内容');
         return;
       }
 
       const docHtml = `
-        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='[http://www.w3.org/TR/REC-html40](http://www.w3.org/TR/REC-html40)'>
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head>
           <meta charset="utf-8">
           <title>${escapeHtml(title)}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { font-size: 18pt; border-bottom: 2px solid #333; padding-bottom: 6px; }
-            pre { background: #f4f4f4; padding: 12px; font-family: Consolas, monospace; font-size: 10pt; white-space: pre-wrap; word-wrap: break-word; }
+            pre { background: #f4f4f4; padding: 10px; font-family: Consolas, monospace; font-size: 10pt; white-space: pre-wrap; word-wrap: break-word; }
           </style>
         </head>
         <body>
-          <h1>${escapeHtml(title)}</h1>
-          <p style="color:#666; font-size:9pt;">导出时间：${new Date().toLocaleString('zh-CN')}</p>
+          <h2>${escapeHtml(title)}</h2>
+          <p style="color:#666; font-size:9pt;">时间：${new Date().toLocaleString('zh-CN')}</p>
           <hr/>
           <pre>${escapeHtml(code)}</pre>
         </body>
@@ -589,7 +531,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // 8. 新建空白
     function clearEditor() {
       currentId = null;
       document.getElementById('snippetTitle').value = '';
@@ -598,13 +539,12 @@
       renderSnippetList();
     }
 
-    // 9. 删除文件
     function deleteSnippet(event, id) {
       if (event) event.stopPropagation();
-      if (confirm('确定要删除这份代码吗？')) {
-        snippets = snippets.filter(s => s.id !== id);
+      if (confirm('确认删除？')) {
+        snippets = snippets.filter(s => String(s.id) !== String(id));
         saveToStorage();
-        if (currentId === id) {
+        if (String(currentId) === String(id)) {
           clearEditor();
         } else {
           renderSnippetList();
@@ -612,14 +552,34 @@
       }
     }
 
-    // 10. 预览函数：原封不动纯粹渲染（不拼凑任何额外标签）
-    function updatePreview() {
-      const code = document.getElementById('codeEditor').value || '';
-      const iframe = document.getElementById('previewFrame');
-      iframe.srcdoc = code;
+    function cleanCodeForPreview(code) {
+      if (!code) return '';
+      let cleaned = code.trim();
+      cleaned = cleaned.replace(/^```[a-zA-Z0-9_-]*\s*/i, '');
+      cleaned = cleaned.replace(/\s*```$/i, '');
+      return cleaned;
     }
 
-    // 11. 折叠代码框
+    function updatePreview() {
+      const rawCode = document.getElementById('codeEditor').value || '';
+      const iframe = document.getElementById('previewFrame');
+      const cleanCode = cleanCodeForPreview(rawCode);
+
+      const bg = isDarkMode ? '#000000' : '#ffffff';
+      const text = isDarkMode ? '#ffffff' : '#000000';
+
+      const baseStyle = `<style>
+        html, body {
+          margin: 0;
+          padding: 0;
+          background-color: ${bg};
+          color: ${text};
+        }
+      </style>`;
+
+      iframe.srcdoc = baseStyle + cleanCode;
+    }
+
     function toggleEditor() {
       const card = document.getElementById('editorCard');
       const btn = document.getElementById('collapseBtn');
