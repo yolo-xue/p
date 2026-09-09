@@ -50,7 +50,7 @@
     }
 
     .sidebar {
-      width: 260px;
+      width: 240px;
       background: var(--bg-card);
       border-right: 1px solid var(--border-color);
       display: flex;
@@ -60,15 +60,15 @@
     }
 
     .sidebar-header {
-      padding: 10px;
+      padding: 8px;
       border-bottom: 1px solid var(--border-color);
       flex-shrink: 0;
     }
 
     .sidebar-title {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: bold;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -76,7 +76,7 @@
 
     .search-box {
       width: 100%;
-      padding: 5px 8px;
+      padding: 4px 6px;
       font-size: 12px;
       border: 1px solid var(--border-color);
       outline: none;
@@ -91,11 +91,11 @@
     .snippet-list {
       flex: 1;
       overflow-y: auto;
-      padding: 6px;
+      padding: 4px;
     }
 
     .snippet-item {
-      padding: 6px 8px;
+      padding: 6px;
       margin-bottom: 4px;
       border: 1px solid var(--border-color);
       cursor: pointer;
@@ -140,7 +140,7 @@
       font-size: 11px;
       cursor: pointer;
       padding: 2px 4px;
-      margin-left: 6px;
+      margin-left: 4px;
     }
 
     .delete-btn:hover {
@@ -152,8 +152,8 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 10px;
-      gap: 10px;
+      padding: 8px;
+      gap: 8px;
       overflow: hidden;
       height: 100vh;
     }
@@ -171,23 +171,23 @@
     }
 
     .card-header {
-      padding: 8px 10px;
+      padding: 6px 8px;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
     .name-input {
       font-size: 12px;
       border: 1px solid var(--border-color);
-      padding: 5px 8px;
+      padding: 4px 6px;
       outline: none;
       flex: 1;
-      min-width: 140px;
-      max-width: 220px;
+      min-width: 120px;
+      max-width: 200px;
       background: var(--bg-card);
       color: var(--text-main);
     }
@@ -198,13 +198,13 @@
 
     .btn-group {
       display: flex;
-      gap: 6px;
+      gap: 4px;
       flex-wrap: wrap;
       align-items: center;
     }
 
     .btn {
-      padding: 5px 10px;
+      padding: 4px 8px;
       font-size: 12px;
       cursor: pointer;
       border: 1px solid var(--btn-border);
@@ -223,7 +223,7 @@
     }
 
     .editor-body {
-      height: 180px;
+      height: 160px;
     }
 
     .editor-card.collapsed .editor-body {
@@ -253,7 +253,7 @@
     .preview-title-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .preview-title {
@@ -275,6 +275,7 @@
       height: 100%;
       overflow: auto;
       background: var(--canvas-bg);
+      position: relative;
     }
 
     iframe.preview-frame {
@@ -302,15 +303,15 @@
       .sidebar {
         width: 100%;
         height: auto;
-        max-height: 180px;
+        max-height: 160px;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
       }
 
       .main-content {
         height: auto;
-        padding: 8px;
-        gap: 8px;
+        padding: 6px;
+        gap: 6px;
         overflow: visible;
       }
 
@@ -332,7 +333,7 @@
       }
 
       .editor-body {
-        height: 150px;
+        height: 140px;
       }
 
       .preview-card {
@@ -370,7 +371,7 @@
         </div>
       </div>
       <div class="editor-body" id="editorBody">
-        <textarea id="codeEditor" class="code-editor" placeholder="在此粘贴 HTML/CSS/JS 代码..."></textarea>
+        <textarea id="codeEditor" class="code-editor" placeholder="在此粘贴代码..."></textarea>
       </div>
     </div>
 
@@ -379,9 +380,9 @@
         <div class="preview-title-group">
           <span class="preview-title">实时预览</span>
           <div class="scale-control">
-            <span>缩放:</span>
-            <button type="button" class="btn" id="scale100" onclick="setScale(1.0)">100%</button>
-            <button type="button" class="btn active" id="scale80" onclick="setScale(0.8)">80%</button>
+            <span>视角:</span>
+            <button type="button" class="btn active" id="scale100" onclick="setScale(1.0)">100% 原始尺寸</button>
+            <button type="button" class="btn" id="scale80" onclick="setScale(0.8)">80%</button>
             <button type="button" class="btn" id="scale60" onclick="setScale(0.6)">60%</button>
           </div>
         </div>
@@ -399,7 +400,7 @@
     let currentId = null;
     let isCollapsed = false;
     let isDarkMode = false;
-    let currentScale = 0.8;
+    let currentScale = 1.0;
 
     window.addEventListener('DOMContentLoaded', () => {
       loadSnippets();
@@ -585,14 +586,15 @@
       }
     }
 
-    // 清洗代码：递归剥离所有的 ``` 块与包裹标记
+    // 全量彻底剥离 ```html, ```css, ```js 和结尾的 ```
     function cleanCodeForPreview(code) {
       if (!code) return '';
       let cleaned = code.trim();
-      cleaned = cleaned.replace(/^```[a-zA-Z0-9_-]*\s*/gi, '');
-      cleaned = cleaned.replace(/\s*```$/gi, '');
-      cleaned = cleaned.replace(/^```[a-zA-Z0-9_-]*$/gmi, '');
-      return cleaned;
+      cleaned = cleaned.replace(/^```[a-zA-Z0-9_-]*\s*/gmi, '');
+      cleaned = cleaned.replace(/\s*```$/gmi, '');
+      cleaned = cleaned.replace(/```html/gim, '');
+      cleaned = cleaned.replace(/```/g, '');
+      return cleaned.trim();
     }
 
     function updatePreview() {
@@ -604,26 +606,25 @@
       const text = isDarkMode ? '#ffffff' : '#000000';
       const scaledWidth = (100 / currentScale).toFixed(2);
 
+      // 完全还原天然 HTML/CSS 布局，绝不强加 display: flex
       const baseStyle = `<style>
         *, *::before, *::after {
           box-sizing: border-box;
         }
-        html, body {
-          margin: 0;
-          padding: 0;
+        html {
           background-color: ${bg} !important;
           color: ${text};
           width: 100%;
-          min-height: 100vh;
+          height: 100%;
         }
         body {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: flex-start;
-          padding: 10px;
+          margin: 0;
+          padding: 0;
+          min-height: 100vh;
+          background-color: ${bg} !important;
+          color: ${text};
           transform: scale(${currentScale});
-          transform-origin: top center;
+          transform-origin: 0 0;
           width: ${scaledWidth}%;
         }
       </style>`;
