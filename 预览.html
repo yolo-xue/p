@@ -1,492 +1,564 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>代码收集与预览工作台</title>
-<style>
-:root {
---bg-main: #f8fafc;
---bg-card: #ffffff;
---border-color: #e2e8f0;
---border-focus: #94a3b8;
---text-main: #0f172a;
---text-muted: #64748b;
---primary: #0f172a;
---primary-hover: #334155;
---danger: #ef4444;
---radius: 10px;
---iframe-bg: #121212;
-}
-body.dark-mode {
---bg-main: #0f172a;
---bg-card: #1e293b;
---border-color: #334155;
---border-focus: #64748b;
---text-main: #f8fafc;
---text-muted: #94a3b8;
---primary: #38bdf8;
---primary-hover: #0284c7;
---danger: #f87171;
-}
-* {
-box-sizing: border-box;
-margin: 0;
-padding: 0;
--webkit-tap-highlight-color: transparent;
-}
-body {
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-background-color: var(--bg-main);
-color: var(--text-main);
-height: 100vh;
-display: flex;
-overflow: hidden;
-transition: background-color 0.3s, color 0.3s;
-}
-.sidebar {
-width: 300px;
-background: var(--bg-card);
-border-right: 1px solid var(--border-color);
-display: flex;
-flex-direction: column;
-flex-shrink: 0;
-transition: background-color 0.3s, border-color 0.3s;
-}
-.sidebar-header {
-padding: 16px;
-border-bottom: 1px solid var(--border-color);
-}
-.sidebar-title {
-font-size: 15px;
-font-weight: 600;
-margin-bottom: 10px;
-display: flex;
-justify-content: space-between;
-align-items: center;
-}
-.search-box {
-width: 100%;
-padding: 10px 12px;
-font-size: 14px;
-border: 1px solid var(--border-color);
-border-radius: var(--radius);
-outline: none;
-background: var(--bg-main);
-color: var(--text-main);
-transition: all 0.2s;
-}
-.snippet-list {
-flex: 1;
-overflow-y: auto;
-padding: 10px;
-}
-.snippet-item {
-padding: 12px;
-border-radius: var(--radius);
-margin-bottom: 8px;
-border: 1px solid transparent;
-cursor: pointer;
-transition: all 0.2s;
-display: flex;
-justify-content: space-between;
-align-items: center;
-background: var(--bg-main);
-}
-.snippet-item.active {
-background: var(--bg-card);
-border-color: var(--primary);
-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-.snippet-info {
-overflow: hidden;
-flex: 1;
-padding-right: 8px;
-}
-.snippet-name {
-font-size: 14px;
-font-weight: 500;
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
-}
-.snippet-date {
-font-size: 11px;
-color: var(--text-muted);
-margin-top: 4px;
-}
-.delete-btn {
-background: none;
-border: none;
-color: var(--text-muted);
-font-size: 16px;
-cursor: pointer;
-padding: 6px 10px;
-border-radius: 4px;
-}
-.delete-btn:hover {
-color: var(--danger);
-background: rgba(239, 68, 68, 0.15);
-}
-.main-content {
-flex: 1;
-display: flex;
-flex-direction: column;
-padding: 16px;
-gap: 16px;
-overflow: hidden;
-}
-.card {
-background: var(--bg-card);
-border: 1px solid var(--border-color);
-border-radius: var(--radius);
-display: flex;
-flex-direction: column;
-overflow: hidden;
-box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-transition: background-color 0.3s, border-color 0.3s;
-}
-.editor-card {
-flex-shrink: 0;
-transition: all 0.3s ease;
-}
-.card-header {
-padding: 12px 16px;
-border-bottom: 1px solid var(--border-color);
-display: flex;
-justify-content: space-between;
-align-items: center;
-background: var(--bg-main);
-gap: 10px;
-}
-.name-input {
-font-size: 14px;
-font-weight: 600;
-border: 1px solid var(--border-color);
-padding: 8px 12px;
-border-radius: 6px;
-outline: none;
-flex: 1;
-max-width: 280px;
-background: var(--bg-card);
-color: var(--text-main);
-}
-.btn-group {
-display: flex;
-gap: 8px;
-}
-.btn {
-padding: 8px 14px;
-font-size: 13px;
-font-weight: 500;
-border-radius: 6px;
-cursor: pointer;
-border: 1px solid var(--border-color);
-background: var(--bg-card);
-color: var(--text-main);
-white-space: nowrap;
-transition: all 0.2s;
-}
-.btn:active {
-transform: scale(0.98);
-}
-.btn-primary {
-background: var(--primary);
-color: #ffffff;
-border-color: var(--primary);
-}
-body.dark-mode .btn-primary {
-color: #0f172a;
-}
-.editor-body {
-height: 200px;
-transition: height 0.3s ease;
-}
-.editor-card.collapsed .editor-body {
-height: 0 !important;
-overflow: hidden;
-}
-textarea.code-editor {
-width: 100%;
-height: 100%;
-padding: 14px;
-border: none;
-outline: none;
-font-family: "Fira Code", Consolas, Monaco, monospace;
-font-size: 13px;
-line-height: 1.5;
-resize: none;
-color: var(--text-main);
-background: var(--bg-card);
-}
-.preview-card {
-flex: 1;
-min-height: 250px;
-}
-.preview-title {
-font-size: 13px;
-font-weight: 600;
-color: var(--text-muted);
-}
-.preview-wrapper {
-flex: 1;
-width: 100%;
-height: 100%;
-overflow: hidden;
-background: var(--iframe-bg);
-transition: background-color 0.3s;
-}
-iframe.preview-frame {
-width: 100%;
-height: 100%;
-border: none;
-overflow-y: auto;
-}
-.empty-tip {
-text-align: center;
-color: var(--text-muted);
-font-size: 13px;
-padding: 20px 0;
-}
-@media (max-width: 768px) {
-body {
-flex-direction: column;
-height: auto;
-min-height: 100vh;
-overflow-y: auto;
-}
-.sidebar {
-width: 100%;
-max-height: 220px;
-border-right: none;
-border-bottom: 1px solid var(--border-color);
-}
-.snippet-list {
-max-height: 120px;
-}
-.main-content {
-padding: 10px;
-gap: 12px;
-overflow: visible;
-}
-.card-header {
-flex-direction: column;
-align-items: stretch;
-}
-.name-input {
-max-width: 100%;
-width: 100%;
-}
-.btn-group {
-width: 100%;
-display: grid;
-grid-template-columns: repeat(3, 1fr);
-gap: 6px;
-}
-.btn {
-padding: 8px 4px;
-font-size: 12px;
-text-align: center;
-justify-content: center;
-}
-.editor-body {
-height: 160px;
-}
-.preview-card {
-height: 460px;
-min-height: 400px;
-}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>代码收集与预览工作台</title>
+  <style>
+    :root {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #0f172a;
+      --danger: #ef4444;
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ---------------- 左侧列表栏 ---------------- */
+    .sidebar {
+      width: 300px;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      outline: none;
+      background: #f1f5f9;
+    }
+
+    .snippet-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .snippet-item {
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      margin-bottom: 6px;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+
+    .snippet-item.active {
+      border-color: var(--primary);
+      background: #f8fafc;
+      font-weight: 600;
+    }
+
+    .snippet-info {
+      overflow: hidden;
+      flex: 1;
+      padding-right: 6px;
+    }
+
+    .snippet-name {
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .snippet-date {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    .delete-btn:hover {
+      color: var(--danger);
+    }
+
+    /* ---------------- 右侧编辑与预览 ---------------- */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 上方编辑框 */
+    .editor-card {
+      flex-shrink: 0;
+    }
+
+    .card-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      gap: 8px;
+    }
+
+    .name-input {
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      padding: 6px 10px;
+      border-radius: 6px;
+      outline: none;
+      flex: 1;
+      max-width: 260px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .btn-blue {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    .editor-body {
+      height: 180px;
+      transition: height 0.2s ease;
+    }
+
+    .editor-card.collapsed .editor-body {
+      height: 0 !important;
+      overflow: hidden;
+    }
+
+    textarea.code-editor {
+      width: 100%;
+      height: 100%;
+      padding: 10px;
+      border: none;
+      outline: none;
+      font-family: monospace;
+      font-size: 12px;
+      line-height: 1.4;
+      resize: none;
+    }
+
+    /* 下方预览区 */
+    .preview-card {
+      flex: 1;
+      min-height: 200px;
+      background: #ffffff;
+    }
+
+    .preview-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .preview-wrapper {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    iframe.preview-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #ffffff;
+    }
+
+    .empty-tip {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 20px 0;
+    }
+
+    /* 手机端适配 */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+      }
+
+      .sidebar {
+        width: 100%;
+        max-height: 200px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .snippet-list {
+        max-height: 110px;
+      }
+
+      .main-content {
+        padding: 8px;
+        gap: 8px;
+        overflow: visible;
+      }
+
+      .card-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .name-input {
+        max-width: 100%;
+        width: 100%;
+      }
+
+      .btn-group {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+      }
+
+      .btn {
+        padding: 6px 2px;
+        text-align: center;
+      }
+
+      .editor-body {
+        height: 150px;
+      }
+
+      .preview-card {
+        height: 450px;
+      }
+    }
+  </style>
 </head>
 <body>
-<aside class="sidebar">
-<div class="sidebar-header">
-<div class="sidebar-title">
-<span>我的代码库</span>
-<div style="display:flex; gap:6px;">
-<button class="btn" id="themeBtn" onclick="toggleDarkMode()">🌙 模式</button>
-<button class="btn" onclick="clearEditor()">+ 新建</button>
-</div>
-</div>
-<input type="text" id="searchInput" class="search-box" placeholder="搜索保存的代码名称..." oninput="renderSnippetList()">
-</div>
-<div class="snippet-list" id="snippetList"></div>
-</aside>
-<main class="main-content">
-<div class="card editor-card" id="editorCard">
-<div class="card-header">
-<input type="text" id="snippetTitle" class="name-input" placeholder="输入代码名称...">
-<div class="btn-group">
-<button class="btn" id="collapseBtn" onclick="toggleEditor()">折叠代码</button>
-<button class="btn btn-primary" onclick="saveSnippet()">保存代码</button>
-<button class="btn btn-primary" style="background:#2563eb; border-color:#2563eb; color:#fff;" onclick="updatePreview()">▶ 预览</button>
-</div>
-</div>
-<div class="editor-body" id="editorBody">
-<textarea id="codeEditor" class="code-editor" placeholder="在此粘贴你的代码..."></textarea>
-</div>
-</div>
-<div class="card preview-card">
-<div class="card-header">
-<span class="preview-title">实时预览效果</span>
-<button class="btn" id="canvasBgBtn" onclick="toggleCanvasBg()">🎨 画布背景(深/浅)</button>
-</div>
-<div class="preview-wrapper" id="previewWrapper">
-<iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
-</div>
-</div>
-</main>
-<script>
-const STORAGE_KEY = 'my_saved_code_snippets';
-let snippets = [];
-let currentId = null;
-let isCollapsed = false;
-let isDarkCanvas = true;
-window.onload = function() {
-loadSnippets();
-if (!snippets || snippets.length === 0) {
-loadDefaultExample();
-} else {
-renderSnippetList();
-selectSnippet(snippets[0].id);
-}
-};
-function toggleDarkMode() {
-document.body.classList.toggle('dark-mode');
-const isDark = document.body.classList.contains('dark-mode');
-document.getElementById('themeBtn').textContent = isDark ? '☀️ 亮色' : '🌙 模式';
-}
-function toggleCanvasBg() {
-isDarkCanvas = !isDarkCanvas;
-applyCanvasBg();
-}
-function applyCanvasBg() {
-const wrapper = document.getElementById('previewWrapper');
-if (wrapper) {
-wrapper.style.backgroundColor = isDarkCanvas ? '#121212' : '#ffffff';
-}
-}
-function loadSnippets() {
-try {
-const data = localStorage.getItem(STORAGE_KEY);
-snippets = data ? JSON.parse(data) : [];
-} catch(e) {
-snippets = [];
-}
-}
-function saveToStorage() {
-try {
-localStorage.setItem(STORAGE_KEY, JSON.stringify(snippets));
-} catch(e) {
-console.warn('本地存储不可用', e);
-}
-}
-function renderSnippetList() {
-const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-const listContainer = document.getElementById('snippetList');
-listContainer.innerHTML = '';
-const filtered = snippets.filter(item => (item.title || '').toLowerCase().includes(keyword));
-if (filtered.length === 0) {
-listContainer.innerHTML = '<div class="empty-tip">无匹配代码</div>';
-return;
-}
-filtered.forEach(item => {
-const div = document.createElement('div');
-div.className = snippet-item ${item.id === currentId ? 'active' : ''};
-div.onclick = function() { selectSnippet(item.id); };
-div.innerHTML = <div class="snippet-info"> <div class="snippet-name">${escapeHtml(item.title || '未命名代码')}</div> <div class="snippet-date">${item.date}</div> </div> <button class="delete-btn" onclick="deleteSnippet(event, '${item.id}')">✕</button>;
-listContainer.appendChild(div);
-});
-}
-function selectSnippet(id) {
-const item = snippets.find(s => s.id === id);
-if (!item) return;
-currentId = item.id;
-document.getElementById('snippetTitle').value = item.title || '';
-document.getElementById('codeEditor').value = item.code || '';
-renderSnippetList();
-updatePreview();
-}
-function saveSnippet() {
-const title = document.getElementById('snippetTitle').value.trim() || '未命名代码';
-const code = document.getElementById('codeEditor').value;
-const date = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-if (currentId) {
-const index = snippets.findIndex(s => s.id === currentId);
-if (index !== -1) snippets[index] = { ...snippets[index], title, code, date };
-} else {
-const newSnippet = { id: Date.now().toString(), title, code, date };
-snippets.unshift(newSnippet);
-currentId = newSnippet.id;
-}
-saveToStorage();
-renderSnippetList();
-updatePreview();
-alert('保存成功！');
-}
-function clearEditor() {
-currentId = null;
-document.getElementById('snippetTitle').value = '';
-document.getElementById('codeEditor').value = '';
-document.getElementById('previewFrame').srcdoc = '';
-renderSnippetList();
-}
-function deleteSnippet(event, id) {
-if (event) event.stopPropagation();
-if (confirm('确定要删除这个代码片段吗？')) {
-snippets = snippets.filter(s => s.id !== id);
-saveToStorage();
-if (currentId === id) {
-clearEditor();
-} else {
-renderSnippetList();
-}
-}
-}
-function updatePreview() {
-const code = document.getElementById('codeEditor').value || '';
-const iframe = document.getElementById('previewFrame');
-applyCanvasBg();
-const patchScript = <script> window.addEventListener('load', function() { var items = document.querySelectorAll('.yan-anim-item'); for(var i=0; i<items.length; i++) { items[i].style.opacity = '1'; } var p = document.getElementById('yan-poster-v30'); if(p) p.classList.add('is-visible'); }); <\/script>;
-try {
-iframe.srcdoc = code + patchScript;
-} catch(e) {
-var doc = iframe.contentDocument || iframe.contentWindow.document;
-doc.open();
-doc.write(code + patchScript);
-doc.close();
-}
-}
-function toggleEditor() {
-const card = document.getElementById('editorCard');
-const btn = document.getElementById('collapseBtn');
-isCollapsed = !isCollapsed;
-if (isCollapsed) {
-card.classList.add('collapsed');
-btn.textContent = '展开代码';
-} else {
-card.classList.remove('collapsed');
-btn.textContent = '折叠代码';
-}
-}
-function escapeHtml(str) {
-return (str || '').replace(/[&<>"']/g, function(match) {
-return { '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' }[match];
-});
-}
-function loadDefaultExample() {
-const defaultSnippet = {
-id: 'default-1',
-title: '我的第一个代码',
-code: <!-- 在此处输入或粘贴你的代码 -->,
-date: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-};
-snippets = [defaultSnippet];
-saveToStorage();
-renderSnippetList();
-selectSnippet(defaultSnippet.id);
-}
-</script>
+
+  <!-- 左侧代码库 -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">
+        <span>我的代码库</span>
+        <button class="btn" id="btnNew">+ 新建</button>
+      </div>
+      <input type="text" id="searchInput" class="search-box" placeholder="搜索保存的代码名称...">
+    </div>
+    <div class="snippet-list" id="snippetList"></div>
+  </aside>
+
+  <!-- 右侧主区域 -->
+  <main class="main-content">
+    <!-- 代码输入框 -->
+    <div class="card editor-card" id="editorCard">
+      <div class="card-header">
+        <input type="text" id="snippetTitle" class="name-input" placeholder="输入代码名称...">
+        <div class="btn-group">
+          <button class="btn" id="btnFold">折叠代码</button>
+          <button class="btn btn-primary" id="btnSave">保存代码</button>
+          <button class="btn btn-blue" id="btnPreview">▶ 预览</button>
+        </div>
+      </div>
+      <div class="editor-body" id="editorBody">
+        <textarea id="codeEditor" class="code-editor" placeholder="在此粘贴你的 HTML / CSS / JS 代码..."></textarea>
+      </div>
+    </div>
+
+    <!-- 预览区域 -->
+    <div class="card preview-card">
+      <div class="card-header">
+        <span class="preview-title">实时预览效果（白色画布）</span>
+      </div>
+      <div class="preview-wrapper">
+        <iframe id="previewFrame" class="preview-frame"></iframe>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      var STORAGE_KEY = 'my_code_snippets_v1';
+      var snippets = [];
+      var currentId = null;
+      var isCollapsed = false;
+
+      // 页面加载完成后绑定事件
+      window.addEventListener('DOMContentLoaded', function() {
+        initStorage();
+        bindEvents();
+        renderList();
+        
+        if (snippets.length > 0) {
+          selectSnippet(snippets[0].id);
+        }
+      });
+
+      // 初始化存储
+      function initStorage() {
+        try {
+          var data = localStorage.getItem(STORAGE_KEY);
+          snippets = data ? JSON.parse(data) : [];
+        } catch (e) {
+          snippets = [];
+        }
+      }
+
+      // 保存到本地
+      function saveStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(snippets));
+        } catch (e) {}
+      }
+
+      // 绑定所有按钮的点击事件
+      function bindEvents() {
+        document.getElementById('btnNew').addEventListener('click', clearEditor);
+        document.getElementById('btnSave').addEventListener('click', saveSnippet);
+        document.getElementById('btnPreview').addEventListener('click', updatePreview);
+        document.getElementById('btnFold').addEventListener('click', toggleFold);
+        document.getElementById('searchInput').addEventListener('input', renderList);
+      }
+
+      // 清理代码中的 ```html 或 ``` 标记
+      function cleanMarkdownCode(str) {
+        if (!str) return '';
+        return str.replace(/^```[a-zA-Z]*\n?/g, '').replace(/\n?```$/g, '').trim();
+      }
+
+      // 渲染左侧列表
+      function renderList() {
+        var keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+        var container = document.getElementById('snippetList');
+        container.innerHTML = '';
+
+        var list = snippets.filter(function(item) {
+          return (item.title || '').toLowerCase().indexOf(keyword) !== -1;
+        });
+
+        if (list.length === 0) {
+          container.innerHTML = '<div class="empty-tip">暂无保存的代码</div>';
+          return;
+        }
+
+        list.forEach(function(item) {
+          var div = document.createElement('div');
+          div.className = 'snippet-item' + (item.id === currentId ? ' active' : '');
+          
+          div.onclick = function() { selectSnippet(item.id); };
+
+          div.innerHTML = 
+            '<div class="snippet-info">' +
+              '<div class="snippet-name">' + escapeHtml(item.title || '未命名代码') + '</div>' +
+              '<div class="snippet-date">' + item.date + '</div>' +
+            '</div>' +
+            '<button class="delete-btn" title="删除">✕</button>';
+
+          // 单独绑定删除事件
+          div.querySelector('.delete-btn').onclick = function(e) {
+            e.stopPropagation();
+            deleteSnippet(item.id);
+          };
+
+          container.appendChild(div);
+        });
+      }
+
+      // 选中某一条代码
+      function selectSnippet(id) {
+        var item = null;
+        for (var i = 0; i < snippets.length; i++) {
+          if (snippets[i].id === id) {
+            item = snippets[i];
+            break;
+          }
+        }
+        if (!item) return;
+
+        currentId = item.id;
+        document.getElementById('snippetTitle').value = item.title || '';
+        document.getElementById('codeEditor').value = item.code || '';
+        
+        renderList();
+        updatePreview();
+      }
+
+      // 保存代码
+      function saveSnippet() {
+        var title = document.getElementById('snippetTitle').value.trim() || '未命名代码';
+        var rawCode = document.getElementById('codeEditor').value;
+        var code = cleanMarkdownCode(rawCode); // 自动过滤 ```html
+        document.getElementById('codeEditor').value = code;
+
+        var now = new Date();
+        var dateStr = (now.getMonth() + 1) + '/' + now.getDate() + ' ' + now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+
+        if (currentId) {
+          for (var i = 0; i < snippets.length; i++) {
+            if (snippets[i].id === currentId) {
+              snippets[i].title = title;
+              snippets[i].code = code;
+              snippets[i].date = dateStr;
+              break;
+            }
+          }
+        } else {
+          var newObj = {
+            id: String(Date.now()),
+            title: title,
+            code: code,
+            date: dateStr
+          };
+          snippets.unshift(newObj);
+          currentId = newObj.id;
+        }
+
+        saveStorage();
+        renderList();
+        updatePreview();
+        alert('保存成功！');
+      }
+
+      // 新建清空
+      function clearEditor() {
+        currentId = null;
+        document.getElementById('snippetTitle').value = '';
+        document.getElementById('codeEditor').value = '';
+        var iframe = document.getElementById('previewFrame');
+        var doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write('');
+        doc.close();
+        renderList();
+      }
+
+      // 删除代码
+      function deleteSnippet(id) {
+        if (confirm('确定要删除这段代码吗？')) {
+          snippets = snippets.filter(function(s) { return s.id !== id; });
+          saveStorage();
+          if (currentId === id) {
+            clearEditor();
+          } else {
+            renderList();
+          }
+        }
+      }
+
+      // 更新预览框
+      function updatePreview() {
+        var rawCode = document.getElementById('codeEditor').value || '';
+        var code = cleanMarkdownCode(rawCode);
+        
+        // 自动注入兼容样式，确保部分淡入动画在 iframe 内部能正常展示
+        var patchCss = '<style>body { background-color: transparent; } .yan-anim-item { opacity: 1 !important; }</style>';
+        
+        var iframe = document.getElementById('previewFrame');
+        var doc = iframe.contentDocument || iframe.contentWindow.document;
+        
+        doc.open();
+        doc.write(code + patchCss);
+        doc.close();
+      }
+
+      // 折叠展开编辑器
+      function toggleFold() {
+        var card = document.getElementById('editorCard');
+        var btn = document.getElementById('btnFold');
+        isCollapsed = !isCollapsed;
+
+        if (isCollapsed) {
+          card.classList.add('collapsed');
+          btn.textContent = '展开代码';
+        } else {
+          card.classList.remove('collapsed');
+          btn.textContent = '折叠代码';
+        }
+      }
+
+      function escapeHtml(str) {
+        return (str || '').replace(/[&<>"']/g, function(m) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
