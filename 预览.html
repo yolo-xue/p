@@ -248,6 +248,8 @@
     .preview-card {
       flex: 1;
       min-height: 200px;
+      display: flex;
+      flex-direction: column;
     }
 
     .preview-title-group {
@@ -269,6 +271,7 @@
       color: var(--text-muted);
     }
 
+    /* 关键修改 1：确保容器支持绝对定位 */
     .preview-wrapper {
       flex: 1;
       width: 100%;
@@ -278,7 +281,11 @@
       position: relative;
     }
 
+    /* 关键修改 2：绝对定位 100% 填满纵向和横向空间 */
     iframe.preview-frame {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       border: none;
@@ -586,6 +593,7 @@
       }
     }
 
+    // 自动清洗外部 HTML/BODY 结构，防止冲突
     function cleanCodeForPreview(code) {
       if (!code) return '';
       let cleaned = code.trim();
@@ -593,11 +601,18 @@
       cleaned = cleaned.replace(/\s*```$/gmi, '');
       cleaned = cleaned.replace(/```html/gim, '');
       cleaned = cleaned.replace(/```/g, '');
+      
+      // 提取纯组件内容，过滤掉用户可能粘贴的 <!DOCTYPE> <html> <body> 标签外壳
+      cleaned = cleaned.replace(/<!DOCTYPE[^>]*>/gi, '');
+      cleaned = cleaned.replace(/<\/?html[^>]*>/gi, '');
+      cleaned = cleaned.replace(/<\/?head[^>]*>/gi, '');
+      cleaned = cleaned.replace(/<\/?body[^>]*>/gi, '');
+
       return cleaned.trim();
     }
 
     // ==========================================
-    // 彻底重构：强行垂直水平双向居中
+    // 核心渲染逻辑：打造 100% 纵向+横向绝对居中画布
     // ==========================================
     function updatePreview() {
       const rawCode = document.getElementById('codeEditor').value || '';
@@ -607,37 +622,55 @@
       const bg = isDarkMode ? '#121212' : '#f5f5f5';
       const text = isDarkMode ? '#ffffff' : '#000000';
 
-      const baseStyle = `<style>
-        *, *::before, *::after {
-          box-sizing: border-box;
-        }
-        html {
-          height: 100%;
-          width: 100%;
-          background-color: ${bg};
-          color: ${text};
-        }
-        body {
-          margin: 0;
-          padding: 20px;
-          width: 100%;
-          min-height: 100vh;
-          background-color: ${bg};
-          color: ${text};
-          
-          /* 核心修复：全浏览器标准的 Flex 垂直 + 水平双向绝对居中 */
-          display: flex;
-          flex-direction: column;
-          justify-content: center; /* 纵向居中 */
-          align-items: center;     /* 横向居中 */
-          
-          transform: scale(${currentScale});
-          transform-origin: center center;
-          overflow: auto;
-        }
-      </style>`;
+      const fullHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: ${bg};
+      color: ${text};
+      overflow: hidden;
+    }
+    
+    /* 1. 全屏 Flex 画布容器 */
+    .canvas-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      overflow: auto;
+      padding: 20px;
+    }
+    
+    /* 2. margin: auto 魔法 -> 自动吸收上下左右剩余的所有空白，实现完美的纵向+横向正中央锁定 */
+    .component-wrapper {
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transform: scale(${currentScale});
+      transform-origin: center center;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas-container">
+    <div class="component-wrapper">
+      ${cleanCode}
+    </div>
+  </div>
+</body>
+</html>`;
 
-      iframe.srcdoc = baseStyle + cleanCode;
+      iframe.srcdoc = fullHtml;
     }
 
     function toggleEditor() {
