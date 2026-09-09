@@ -16,7 +16,7 @@
       --btn-text: #000000;
       --btn-border: #000000;
       --btn-hover: #f0f0f0;
-      --canvas-bg: #e0e0e0; /* 略加暗色底色，突出中央预览窗口 */
+      --canvas-bg: #f9f9f9; /* 给画布一点点底色，更容易区分 */
     }
 
     body.dark-mode {
@@ -30,7 +30,7 @@
       --btn-text: #ffffff;
       --btn-border: #ffffff;
       --btn-hover: #1a1a1a;
-      --canvas-bg: #121212;
+      --canvas-bg: #0a0a0a;
     }
 
     * {
@@ -269,26 +269,19 @@
       color: var(--text-muted);
     }
 
-    /* 真正的强力居中画布容器 */
     .preview-wrapper {
       flex: 1;
       width: 100%;
       height: 100%;
-      overflow: auto;
+      overflow: hidden;
       background: var(--canvas-bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
       position: relative;
     }
 
-    /* iframe 作为中央独立模拟器窗口，拥有阴影和边框，尺寸动态缩放 */
     iframe.preview-frame {
-      border: 1px solid var(--border-color);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      background: #ffffff;
-      transition: width 0.2s ease, height 0.2s ease;
+      width: 100%;
+      height: 100%;
+      border: none;
       display: block;
     }
 
@@ -387,10 +380,10 @@
         <div class="preview-title-group">
           <span class="preview-title">实时预览</span>
           <div class="scale-control">
-            <span>视角尺寸:</span>
-            <button type="button" class="btn active" id="scale100" onclick="setScale(1.0)">100% 全屏</button>
-            <button type="button" class="btn" id="scale80" onclick="setScale(0.8)">80% 居中</button>
-            <button type="button" class="btn" id="scale60" onclick="setScale(0.6)">60% 居中</button>
+            <span>视角:</span>
+            <button type="button" class="btn active" id="scale100" onclick="setScale(1.0)">100% 原始尺寸</button>
+            <button type="button" class="btn" id="scale80" onclick="setScale(0.8)">80%</button>
+            <button type="button" class="btn" id="scale60" onclick="setScale(0.6)">60%</button>
           </div>
         </div>
       </div>
@@ -436,23 +429,7 @@
       document.getElementById('scale100').classList.toggle('active', scaleValue === 1.0);
       document.getElementById('scale80').classList.toggle('active', scaleValue === 0.8);
       document.getElementById('scale60').classList.toggle('active', scaleValue === 0.6);
-      
-      applyIframeSize();
-    }
-
-    // 动态调整 iframe 容器在中央的大小，彻底放弃 scale() 剪裁机制
-    function applyIframeSize() {
-      const iframe = document.getElementById('previewFrame');
-      if (currentScale === 1.0) {
-        iframe.style.width = '100%';
-        iframe.style.height = '100%';
-      } else if (currentScale === 0.8) {
-        iframe.style.width = '80%';
-        iframe.style.height = '85%';
-      } else if (currentScale === 0.6) {
-        iframe.style.width = '60%';
-        iframe.style.height = '70%';
-      }
+      updatePreview();
     }
 
     function loadSnippets() {
@@ -619,30 +596,59 @@
       return cleaned.trim();
     }
 
+    // ==========================================
+    // 核心修复区域：修正了导致截断和居中异常的渲染逻辑
+    // ==========================================
     function updatePreview() {
       const rawCode = document.getElementById('codeEditor').value || '';
       const iframe = document.getElementById('previewFrame');
       const cleanCode = cleanCodeForPreview(rawCode);
 
-      const bg = isDarkMode ? '#000000' : '#ffffff';
+      // 同步工作台背景色，我稍微去掉了 !important 以防覆盖用户自己的背景代码
+      const bg = isDarkMode ? '#0a0a0a' : '#f9f9f9';
       const text = isDarkMode ? '#ffffff' : '#000000';
 
-      // 保持内部最干净的原生 HTML 渲染，不干涉用户代码的任何 CSS 排版，提供独立完整视角
       const baseStyle = `<style>
-        *, *::before, *::after {
+        /* 重置默认样式，保证基础盒模型正常 */
+        html {
           box-sizing: border-box;
+          color-scheme: ${isDarkMode ? 'dark' : 'light'};
         }
-        html, body {
-          background-color: ${bg} !important;
-          color: ${text};
+        *, *::before, *::after {
+          box-sizing: inherit;
+        }
+
+        body {
           margin: 0;
-          padding: 0;
-          min-height: 100%;
+          padding: 24px;
+          min-height: 100vh;
+          background-color: ${bg};
+          color: ${text};
+          
+          /* 💡 修复重点 1：使用安全居中 (safe center) */
+          /* 如果组件比画布小：它完美在正中间显示 */
+          /* 如果组件比画布大：它会自动退化为顶部/左侧对齐，生成正确的滚动条，绝不会吞掉内容！ */
+          display: grid;
+          place-content: safe center;
+          place-items: safe center;
+          
+          /* 💡 修复重点 2：使用 zoom 替代 transform: scale */
+          /* zoom 能完美实现缩放同时告诉浏览器正确的滚动边界 */
+          zoom: ${currentScale};
+        }
+
+        /* 如果遇到极少数不支持 zoom 的浏览器，提供安全降级 */
+        @supports not (zoom: 1) {
+          body {
+            transform: scale(${currentScale});
+            transform-origin: top left;
+            width: ${100 / currentScale}%;
+            min-height: ${100 / currentScale}vh;
+          }
         }
       </style>`;
 
       iframe.srcdoc = baseStyle + cleanCode;
-      applyIframeSize();
     }
 
     function toggleEditor() {
