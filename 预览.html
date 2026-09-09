@@ -200,6 +200,7 @@
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     .btn {
@@ -216,8 +217,9 @@
       background: var(--btn-hover);
     }
 
-    .btn:active {
-      opacity: 0.7;
+    .btn.active {
+      background: var(--btn-text);
+      color: var(--btn-bg);
     }
 
     .editor-body {
@@ -248,16 +250,30 @@
       min-height: 200px;
     }
 
+    .preview-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
     .preview-title {
       font-size: 12px;
       font-weight: bold;
+    }
+
+    .scale-control {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
     }
 
     .preview-wrapper {
       flex: 1;
       width: 100%;
       height: 100%;
-      overflow: hidden;
+      overflow: auto;
       background: var(--canvas-bg);
     }
 
@@ -320,7 +336,7 @@
       }
 
       .preview-card {
-        height: 450px;
+        height: 480px;
       }
     }
   </style>
@@ -360,7 +376,15 @@
 
     <div class="card preview-card" id="previewCard">
       <div class="card-header">
-        <span class="preview-title">实时预览</span>
+        <div class="preview-title-group">
+          <span class="preview-title">实时预览</span>
+          <div class="scale-control">
+            <span>缩放:</span>
+            <button type="button" class="btn" id="scale100" onclick="setScale(1.0)">100%</button>
+            <button type="button" class="btn active" id="scale80" onclick="setScale(0.8)">80%</button>
+            <button type="button" class="btn" id="scale60" onclick="setScale(0.6)">60%</button>
+          </div>
+        </div>
       </div>
       <div class="preview-wrapper">
         <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
@@ -375,6 +399,7 @@
     let currentId = null;
     let isCollapsed = false;
     let isDarkMode = false;
+    let currentScale = 0.8;
 
     window.addEventListener('DOMContentLoaded', () => {
       loadSnippets();
@@ -395,6 +420,14 @@
         document.body.classList.remove('dark-mode');
         document.getElementById('themeBtn').textContent = '夜间模式';
       }
+      updatePreview();
+    }
+
+    function setScale(scaleValue) {
+      currentScale = scaleValue;
+      document.getElementById('scale100').classList.toggle('active', scaleValue === 1.0);
+      document.getElementById('scale80').classList.toggle('active', scaleValue === 0.8);
+      document.getElementById('scale60').classList.toggle('active', scaleValue === 0.6);
       updatePreview();
     }
 
@@ -502,7 +535,7 @@
       }
 
       const docHtml = `
-        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='[http://www.w3.org/TR/REC-html40](http://www.w3.org/TR/REC-html40)'>
         <head>
           <meta charset="utf-8">
           <title>${escapeHtml(title)}</title>
@@ -552,11 +585,13 @@
       }
     }
 
+    // 清洗代码：递归剥离所有的 ``` 块与包裹标记
     function cleanCodeForPreview(code) {
       if (!code) return '';
       let cleaned = code.trim();
-      cleaned = cleaned.replace(/^```[a-zA-Z0-9_-]*\s*/i, '');
-      cleaned = cleaned.replace(/\s*```$/i, '');
+      cleaned = cleaned.replace(/^```[a-zA-Z0-9_-]*\s*/gi, '');
+      cleaned = cleaned.replace(/\s*```$/gi, '');
+      cleaned = cleaned.replace(/^```[a-zA-Z0-9_-]*$/gmi, '');
       return cleaned;
     }
 
@@ -567,13 +602,29 @@
 
       const bg = isDarkMode ? '#000000' : '#ffffff';
       const text = isDarkMode ? '#ffffff' : '#000000';
+      const scaledWidth = (100 / currentScale).toFixed(2);
 
       const baseStyle = `<style>
+        *, *::before, *::after {
+          box-sizing: border-box;
+        }
         html, body {
           margin: 0;
           padding: 0;
-          background-color: ${bg};
+          background-color: ${bg} !important;
           color: ${text};
+          width: 100%;
+          min-height: 100vh;
+        }
+        body {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
+          padding: 10px;
+          transform: scale(${currentScale});
+          transform-origin: top center;
+          width: ${scaledWidth}%;
         }
       </style>`;
 
