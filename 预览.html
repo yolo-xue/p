@@ -271,7 +271,6 @@
       color: var(--text-muted);
     }
 
-    /* 关键修改 1：确保容器支持绝对定位 */
     .preview-wrapper {
       flex: 1;
       width: 100%;
@@ -281,7 +280,6 @@
       position: relative;
     }
 
-    /* 关键修改 2：绝对定位 100% 填满纵向和横向空间 */
     iframe.preview-frame {
       position: absolute;
       top: 0;
@@ -533,8 +531,11 @@
       updatePreview();
     }
 
+    // ==========================================
+    // 导出逻辑：不修改原代码、兼容手机连续导出
+    // ==========================================
     function exportDocx() {
-      const title = document.getElementById('snippetTitle').value.trim() || '代码文件';
+      const rawTitle = document.getElementById('snippetTitle').value.trim() || '代码文件';
       const code = document.getElementById('codeEditor').value;
 
       if (!code) {
@@ -542,34 +543,44 @@
         return;
       }
 
-      const docHtml = `
-        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-        <head>
-          <meta charset="utf-8">
-          <title>${escapeHtml(title)}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            pre { background: #f4f4f4; padding: 10px; font-family: Consolas, monospace; font-size: 10pt; white-space: pre-wrap; word-wrap: break-word; }
-          </style>
-        </head>
-        <body>
-          <h2>${escapeHtml(title)}</h2>
-          <p style="color:#666; font-size:9pt;">时间：${new Date().toLocaleString('zh-CN')}</p>
-          <hr/>
-          <pre>${escapeHtml(code)}</pre>
-        </body>
-        </html>
-      `;
+      // 清理文件名非法字符，避免手机端保存失败
+      const safeTitle = rawTitle.replace(/[\\/:*?"<>|]/g, '_');
 
-      const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${title}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // 构建标准 Word 兼容 XML 内容，保证原汁原味呈现文本与格式
+      const docContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(safeTitle)}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h2 { font-size: 16pt; margin-bottom: 5px; }
+    p.time { font-size: 9pt; color: #666666; margin-bottom: 12px; }
+    pre { font-family: Consolas, Monaco, monospace; font-size: 10pt; background: #f4f4f4; padding: 10px; white-space: pre-wrap; word-wrap: break-word; }
+  </style>
+</head>
+<body>
+  <h2>${escapeHtml(safeTitle)}</h2>
+  <p class="time">导出时间：${new Date().toLocaleString('zh-CN')}</p>
+  <hr/>
+  <pre>${escapeHtml(code)}</pre>
+</body>
+</html>`;
+
+      // 使用 Base64 编码构造完整的 Data URI，规避 Blob 内存地址(file/blob乱码提示)和手机端单次下载拦截问题
+      const base64Data = window.btoa(unescape(encodeURIComponent('\ufeff' + docContent)));
+      const dataUrl = 'data:application/vnd.ms-word;charset=utf-8;base64,' + base64Data;
+
+      const downloadLink = document.createElement('a');
+      downloadLink.href = dataUrl;
+      downloadLink.download = `${safeTitle}.docx`;
+
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      
+      // 延时移除节点，确保手机端触发下载动作完成
+      setTimeout(() => {
+        document.body.removeChild(downloadLink);
+      }, 300);
     }
 
     function clearEditor() {
@@ -593,7 +604,6 @@
       }
     }
 
-    // 自动清洗外部 HTML/BODY 结构，防止冲突
     function cleanCodeForPreview(code) {
       if (!code) return '';
       let cleaned = code.trim();
@@ -602,7 +612,6 @@
       cleaned = cleaned.replace(/```html/gim, '');
       cleaned = cleaned.replace(/```/g, '');
       
-      // 提取纯组件内容，过滤掉用户可能粘贴的 <!DOCTYPE> <html> <body> 标签外壳
       cleaned = cleaned.replace(/<!DOCTYPE[^>]*>/gi, '');
       cleaned = cleaned.replace(/<\/?html[^>]*>/gi, '');
       cleaned = cleaned.replace(/<\/?head[^>]*>/gi, '');
@@ -611,9 +620,6 @@
       return cleaned.trim();
     }
 
-    // ==========================================
-    // 核心渲染逻辑：打造 100% 纵向+横向绝对居中画布
-    // ==========================================
     function updatePreview() {
       const rawCode = document.getElementById('codeEditor').value || '';
       const iframe = document.getElementById('previewFrame');
@@ -640,7 +646,6 @@
       overflow: hidden;
     }
     
-    /* 1. 全屏 Flex 画布容器 */
     .canvas-container {
       width: 100%;
       height: 100%;
@@ -649,7 +654,6 @@
       padding: 20px;
     }
     
-    /* 2. margin: auto 魔法 -> 自动吸收上下左右剩余的所有空白，实现完美的纵向+横向正中央锁定 */
     .component-wrapper {
       margin: auto;
       display: flex;
