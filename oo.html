@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2 图床测试</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; background: #f0f0f0; }
+        .box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 50px;}
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; margin-top: 15px;}
+        #result { margin-top: 20px; word-wrap: break-word; color: #333; text-align: left; background: #eee; padding: 10px; border-radius: 5px; font-size: 14px;}
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>测试你的图床</h2>
+        <input type="file" id="fileInput" accept="image/*">
+        <br>
+        <button onclick="uploadFile()">点击上传</button>
+        <div id="result">等待上传...</div>
+    </div>
+
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files.length) {
+                alert("请先选择一张图片！");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            resultDiv.innerHTML = "正在上传中，请稍候...";
+
+            try {
+                // 这里是请求你的域名 /upload
+                const response = await fetch('https://kairos.us.ci/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const text = await response.text();
+                resultDiv.innerHTML = `<b>HTTP 状态码:</b> ${response.status}<br><br><b>服务器返回内容:</b><br>${text}`;
+                
+                // 如果成功，解析返回的 JSON 显示图片
+                try {
+                    const json = JSON.parse(text);
+                    if(json.url) {
+                        resultDiv.innerHTML += `<br><br><b>上传成功！图片链接：</b><br><a href="${json.url}" target="_blank">${json.url}</a><br><br><img src="${json.url}" style="max-width: 100%; border-radius: 5px;">`;
+                    }
+                } catch(e) {}
+                
+            } catch (error) {
+                resultDiv.innerHTML = "<b>网络请求失败:</b><br>" + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
