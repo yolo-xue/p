@@ -4,33 +4,43 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>代码收集与预览工作台</title>
+  <!-- Mammoth.js CDN for client-side .docx text extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <style>
     :root {
       --bg-main: #ffffff;
       --bg-card: #ffffff;
-      --border-color: #cccccc;
+      --border-color: #e0e0e0;
       --border-focus: #000000;
-      --text-main: #000000;
+      --text-main: #111111;
       --text-muted: #666666;
       --btn-bg: #ffffff;
-      --btn-text: #000000;
-      --btn-border: #000000;
-      --btn-hover: #f0f0f0;
-      --canvas-bg: #f5f5f5;
+      --btn-text: #111111;
+      --btn-border: #cccccc;
+      --btn-hover: #f4f4f5;
+      --btn-active: #000000;
+      --btn-active-text: #ffffff;
+      --canvas-bg: #f8f9fa;
+      --danger-color: #e53e3e;
+      --danger-hover-bg: #fff5f5;
     }
 
     body.dark-mode {
       --bg-main: #000000;
       --bg-card: #000000;
-      --border-color: #333333;
+      --border-color: #262626;
       --border-focus: #ffffff;
       --text-main: #ffffff;
-      --text-muted: #888888;
+      --text-muted: #a1a1aa;
       --btn-bg: #000000;
       --btn-text: #ffffff;
-      --btn-border: #ffffff;
-      --btn-hover: #1a1a1a;
-      --canvas-bg: #121212;
+      --btn-border: #3f3f46;
+      --btn-hover: #18181b;
+      --btn-active: #ffffff;
+      --btn-active-text: #000000;
+      --canvas-bg: #0a0a0a;
+      --danger-color: #fc8181;
+      --danger-hover-bg: #1f1212;
     }
 
     * {
@@ -40,55 +50,73 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* Cross-browser scrollbar hiding utility */
+    .no-scrollbar {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background-color: var(--bg-main);
       color: var(--text-main);
       height: 100vh;
+      width: 100vw;
       display: flex;
       overflow: hidden;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
+    /* Sidebar Layout & Elements */
     .sidebar {
-      width: 260px;
+      width: 280px;
       background: var(--bg-card);
       border-right: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
       height: 100vh;
+      transition: border-color 0.2s ease;
     }
 
     .sidebar-header {
-      padding: 8px;
+      padding: 12px;
       border-bottom: 1px solid var(--border-color);
       flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .sidebar-title {
-      font-size: 12px;
-      font-weight: bold;
-      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 4px;
     }
 
     .sidebar-title-btns {
       display: flex;
       gap: 4px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .search-box {
       width: 100%;
-      padding: 4px 6px;
+      padding: 6px 10px;
       font-size: 12px;
       border: 1px solid var(--border-color);
+      border-radius: 6px;
       outline: none;
       background: var(--bg-card);
       color: var(--text-main);
+      transition: border-color 0.2s ease;
     }
 
     .search-box:focus {
@@ -98,69 +126,77 @@
     .snippet-list {
       flex: 1;
       overflow-y: auto;
-      padding: 4px;
+      padding: 8px;
     }
 
     .snippet-item {
-      padding: 6px;
-      margin-bottom: 4px;
+      padding: 10px;
+      margin-bottom: 6px;
       border: 1px solid var(--border-color);
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--bg-card);
       font-size: 12px;
+      transition: all 0.15s ease;
     }
 
     .snippet-item:hover {
       border-color: var(--border-focus);
+      transform: translateY(-1px);
     }
 
     .snippet-item.active {
       border-color: var(--border-focus);
       background: var(--btn-hover);
-      font-weight: bold;
+      box-shadow: inset 3px 0 0 0 var(--border-focus);
     }
 
     .snippet-info {
       overflow: hidden;
       flex: 1;
+      padding-right: 6px;
     }
 
     .snippet-name {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-weight: 500;
     }
 
     .snippet-date {
       font-size: 10px;
       color: var(--text-muted);
-      margin-top: 2px;
+      margin-top: 3px;
     }
 
     .delete-btn {
       background: none;
-      border: none;
+      border: 1px solid transparent;
+      border-radius: 4px;
       color: var(--text-muted);
       font-size: 11px;
       cursor: pointer;
-      padding: 2px 4px;
-      margin-left: 4px;
+      padding: 2px 6px;
+      transition: all 0.15s ease;
     }
 
     .delete-btn:hover {
-      color: var(--text-main);
-      text-decoration: underline;
+      color: var(--danger-color);
+      background: var(--danger-hover-bg);
+      border-color: var(--danger-color);
     }
 
+    /* Main Content Layout */
     .main-content {
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 8px;
-      gap: 8px;
+      padding: 10px;
+      gap: 10px;
       overflow: hidden;
       height: 100vh;
     }
@@ -168,35 +204,41 @@
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
+      border-radius: 8px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: border-color 0.2s ease;
     }
 
     .editor-card {
       flex-shrink: 0;
+      transition: all 0.25s ease;
     }
 
     .card-header {
-      padding: 6px 8px;
+      padding: 8px 12px;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 6px;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
     .name-input {
-      font-size: 12px;
+      font-size: 13px;
+      font-weight: 600;
       border: 1px solid var(--border-color);
-      padding: 4px 6px;
+      border-radius: 6px;
+      padding: 5px 10px;
       outline: none;
       flex: 1;
-      min-width: 120px;
-      max-width: 200px;
+      min-width: 150px;
+      max-width: 280px;
       background: var(--bg-card);
       color: var(--text-main);
+      transition: border-color 0.2s ease;
     }
 
     .name-input:focus {
@@ -205,42 +247,58 @@
 
     .btn-group {
       display: flex;
-      gap: 4px;
+      gap: 6px;
       flex-wrap: wrap;
       align-items: center;
     }
 
+    /* Button Styling */
     .btn {
-      padding: 3px 6px;
-      font-size: 11px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
       border: 1px solid var(--btn-border);
+      border-radius: 6px;
       background: var(--btn-bg);
       color: var(--btn-text);
       white-space: nowrap;
+      user-select: none;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .btn:hover {
       background: var(--btn-hover);
+      border-color: var(--border-focus);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
     }
 
     .btn.active {
-      background: var(--btn-text);
-      color: var(--btn-bg);
+      background: var(--btn-active);
+      color: var(--btn-active-text);
+      border-color: var(--btn-active);
     }
 
     .btn-danger {
-      border-color: #d9534f;
-      color: #d9534f;
+      border-color: var(--danger-color);
+      color: var(--danger-color);
     }
 
     .btn-danger:hover {
-      background: #d9534f;
+      background: var(--danger-color);
       color: #ffffff;
     }
 
+    /* Compact Code Editor Height for Maximized Preview Canvas */
     .editor-body {
-      height: 160px;
+      height: 120px;
+      transition: height 0.25s ease;
     }
 
     .editor-card.collapsed .editor-body {
@@ -251,20 +309,23 @@
     textarea.code-editor {
       width: 100%;
       height: 100%;
-      padding: 8px;
+      padding: 10px 12px;
       border: none;
       outline: none;
-      font-family: Consolas, Monaco, monospace;
+      font-family: "Cascadia Code", Consolas, Monaco, "Fira Code", monospace;
       font-size: 12px;
-      line-height: 1.4;
+      line-height: 1.45;
       resize: none;
       color: var(--text-main);
       background: var(--bg-card);
+      overflow-y: auto;
     }
 
+    /* Maximized Preview Card Layout */
     .preview-card {
       flex: 1;
-      min-height: 200px;
+      height: 100%;
+      min-height: 0;
       display: flex;
       flex-direction: column;
     }
@@ -272,12 +333,13 @@
     .preview-title-group {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 14px;
     }
 
     .preview-title {
-      font-size: 12px;
-      font-weight: bold;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
     }
 
     .scale-control {
@@ -292,7 +354,7 @@
       flex: 1;
       width: 100%;
       height: 100%;
-      overflow: hidden;
+      overflow-y: auto;
       background: var(--canvas-bg);
       position: relative;
     }
@@ -311,7 +373,7 @@
       text-align: center;
       color: var(--text-muted);
       font-size: 12px;
-      padding: 12px 0;
+      padding: 32px 0;
     }
 
     @media (max-width: 768px) {
@@ -325,15 +387,15 @@
       .sidebar {
         width: 100%;
         height: auto;
-        max-height: 180px;
+        max-height: 200px;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
       }
 
       .main-content {
         height: auto;
-        padding: 6px;
-        gap: 6px;
+        padding: 8px;
+        gap: 8px;
         overflow: visible;
       }
 
@@ -351,7 +413,7 @@
         width: 100%;
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 4px;
+        gap: 6px;
       }
 
       .editor-body {
@@ -359,26 +421,31 @@
       }
 
       .preview-card {
-        height: 480px;
+        height: 80vh;
+        min-height: 500px;
       }
     }
   </style>
 </head>
 <body>
 
+  <!-- Hidden File Input for Import -->
+  <input type="file" id="fileImporter" style="display: none;" accept=".txt,.html,.htm,.js,.css,.docx,.md,.json" onchange="handleFileImport(event)">
+
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-title">
         <span>代码列表</span>
         <div class="sidebar-title-btns">
-          <button type="button" class="btn btn-danger" onclick="clearAllCache()">清空缓存</button>
+          <button type="button" class="btn btn-danger" onclick="clearAllCache()">清空</button>
           <button type="button" class="btn" id="themeBtn" onclick="toggleDarkMode()">夜间模式</button>
           <button type="button" class="btn" onclick="clearEditor()">新建</button>
+          <button type="button" class="btn active" onclick="saveSnippet()">保存代码</button>
         </div>
       </div>
       <input type="text" id="searchInput" class="search-box" placeholder="搜索文件..." oninput="renderSnippetList()">
     </div>
-    <div class="snippet-list" id="snippetList"></div>
+    <div class="snippet-list no-scrollbar" id="snippetList"></div>
   </aside>
 
   <main class="main-content">
@@ -388,13 +455,13 @@
         <input type="text" id="snippetTitle" class="name-input" placeholder="代码标题...">
         <div class="btn-group">
           <button type="button" class="btn" id="collapseBtn" onclick="toggleEditor()">折叠代码框</button>
+          <button type="button" class="btn" onclick="triggerImport()">导入</button>
           <button type="button" class="btn" onclick="exportDocx()">导出 docx</button>
-          <button type="button" class="btn" onclick="saveSnippet()">保存代码</button>
-          <button type="button" class="btn" onclick="updatePreview()">运行预览</button>
+          <button type="button" class="btn active" onclick="updatePreview()">运行预览</button>
         </div>
       </div>
       <div class="editor-body" id="editorBody">
-        <textarea id="codeEditor" class="code-editor" placeholder="在此粘贴代码..."></textarea>
+        <textarea id="codeEditor" class="code-editor no-scrollbar" placeholder="在此粘贴代码..."></textarea>
       </div>
     </div>
 
@@ -404,13 +471,13 @@
           <span class="preview-title">实时预览</span>
           <div class="scale-control">
             <span>视角:</span>
-            <button type="button" class="btn active" id="scale100" onclick="setScale(1.0)">100% 原始尺寸</button>
+            <button type="button" class="btn active" id="scale100" onclick="setScale(1.0)">100% 原始</button>
             <button type="button" class="btn" id="scale80" onclick="setScale(0.8)">80%</button>
             <button type="button" class="btn" id="scale60" onclick="setScale(0.6)">60%</button>
           </div>
         </div>
       </div>
-      <div class="preview-wrapper" id="previewWrapper">
+      <div class="preview-wrapper no-scrollbar" id="previewWrapper">
         <!-- 动态生成的 Iframe 容器 -->
       </div>
     </div>
@@ -559,6 +626,53 @@
       updatePreview();
     }
 
+    /* Import Functionality */
+    function triggerImport() {
+      const fileInput = document.getElementById('fileImporter');
+      fileInput.value = ''; // Reset input
+      fileInput.click();
+    }
+
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const fileName = file.name;
+      const titleWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+      const extension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+
+      document.getElementById('snippetTitle').value = titleWithoutExt;
+
+      if (extension === '.docx') {
+        // Handle Word Document Import via Mammoth
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const arrayBuffer = e.target.result;
+          if (window.mammoth) {
+            window.mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+              .then(function(result) {
+                document.getElementById('codeEditor').value = result.value.trim();
+                updatePreview();
+              })
+              .catch(function(err) {
+                alert('解析 Word (.docx) 文件失败: ' + err.message);
+              });
+          } else {
+            alert('Mammoth 解析库未加载完成，请检查网络');
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        // Standard Text/Code File Reader
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('codeEditor').value = e.target.result || '';
+          updatePreview();
+        };
+        reader.readAsText(file, 'UTF-8');
+      }
+    }
+
     function exportDocx() {
       const rawTitle = document.getElementById('snippetTitle').value.trim() || '代码文件';
       const code = document.getElementById('codeEditor').value;
@@ -643,8 +757,8 @@
 
       if (!cleanCode) return;
 
-      const bg = isDarkMode ? '#121212' : '#f5f5f5';
-      const text = isDarkMode ? '#ffffff' : '#000000';
+      const bg = isDarkMode ? '#0a0a0a' : '#f8f9fa';
+      const text = isDarkMode ? '#ffffff' : '#111111';
 
       const scaleCss = currentScale !== 1.0 
         ? `transform: scale(${currentScale}); transform-origin: top left; width: ${100 / currentScale}%; height: ${100 / currentScale}%;`
@@ -657,6 +771,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    /* Cross-browser hidden scrollbars inside iframe */
     html, body {
       margin: 0;
       padding: 0;
@@ -664,17 +780,23 @@
       height: 100%;
       background-color: ${bg};
       color: ${text};
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: auto;
       position: relative;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
     .component-wrapper {
       ${scaleCss}
       position: relative;
+      min-height: 100%;
     }
   </style>
   <script>
-    // 关键修复：代理劫持 window.top 与 window.parent
-    // 确保组件内获取的 topWin / topDoc 始终精准指向预览窗口内部，彻底解决悬浮组件无法渲染或无法点击的问题
     try {
       Object.defineProperty(window, 'top', {
         get: function() { return window; },
